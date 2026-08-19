@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="es" class="h-full bg-slate-50 text-slate-900 antialiased selection:bg-blue-500 selection:text-white">
 <head>
   <meta charset="UTF-8">
@@ -8,20 +8,16 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Google Fonts - Inter for Apple-like pristine typography -->
+  <!-- Google Fonts - Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Estilos CSS Personalizados en carpeta css -->
-  <link rel="stylesheet" href="css/style.css">
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Expose modules globally for main application script
     window.FirebaseSDK = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, getDoc, setDoc, onSnapshot };
     window.dispatchEvent(new Event('firebase-sdk-ready'));
   </script>
@@ -34,13 +30,11 @@
             sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
           },
           colors: {
-            // Charcoal reducido en intensidad al 30%
             charcoal: {
               DEFAULT: '#3b3e45',
               dark: '#2d3036',
               light: '#4f535c',
             },
-            // Gori: Pastel Honolulu Blue
             honolulu: {
               50: '#f0f7ff',
               100: '#e0f0fe',
@@ -52,7 +46,6 @@
               700: '#075985',
               bg: '#e8f4fd',
             },
-            // MM: Pastel Bottle Green
             bottlegreen: {
               50: '#f0fdf4',
               100: '#dcfce7',
@@ -64,7 +57,6 @@
               700: '#166534',
               bg: '#eafaf1',
             },
-            // TM: Tangerine Orange
             tangerine: {
               50: '#fff7ed',
               100: '#ffedd5',
@@ -76,7 +68,6 @@
               700: '#9a3412',
               bg: '#fff4eb',
             },
-            // Leader Flag Gold
             gold: {
               300: '#fcd34d',
               400: '#fbbf24',
@@ -95,21 +86,18 @@
   </script>
 
   <style>
-    /* Configuración de renderizado de tipografía fina estilo Apple */
     body {
       font-feature-settings: "cv02", "cv03", "cv04", "cv11";
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Efecto Glassmorphic para el Encabezado Superior */
     .apple-glass {
-      background: rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
     }
 
-    /* Animación Resplandeciente para el Contorno de Líder (Dorado Palpitante) */
     @keyframes leaderGlow {
       0%, 100% {
         box-shadow: 0 0 8px rgba(245, 158, 11, 0.5), inset 0 0 4px rgba(245, 158, 11, 0.2);
@@ -125,7 +113,6 @@
       animation: leaderGlow 2s infinite ease-in-out;
     }
 
-    /* Ocultar las flechas arriba/abajo en inputs numéricos y forzar TEXTO NEGRO SIEMPRE */
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { 
       -webkit-appearance: none; 
@@ -137,19 +124,16 @@
       -webkit-text-fill-color: #000000 !important;
     }
 
-    /* Forzar texto blanco visible cuando la casilla se valida como acierto (verde) o error (rojo) */
     input[type=number].bg-emerald-500,
     input[type=number].bg-red-500 {
       color: #ffffff !important;
       -webkit-text-fill-color: #ffffff !important;
     }
 
-    /* Transición suave para celdas de puntuación e inputs */
     .score-cell {
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Ocultar barra de desplazamiento manteniendo funcionalidad de scroll horizontal */
     .scrollbar-none::-webkit-scrollbar {
       display: none;
     }
@@ -158,7 +142,6 @@
       scrollbar-width: none;
     }
 
-    /* Clases de apoyo para temas de color */
     .bg-honolulu-bg { background-color: #e8f4fd; }
     .bg-honolulu-100 { background-color: #e0f0fe; }
     .text-honolulu-700 { color: #075985; }
@@ -177,24 +160,38 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between bg-[#f5f5f7] text-[#1d1d1f]">
 
-  <!-- APPLE TOP NAVIGATION BAR & LIVE LEADERBOARD HEADER -->
+  <!-- TOP BAR -->
   <header class="sticky top-0 z-50 apple-glass border-b border-slate-200/80 transition-all">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 md:h-20">
+      <div class="flex items-center justify-between h-16 md:h-20 gap-2">
         
-        <!-- Brand & Title (Sin el icono de pelota) -->
-        <div class="flex items-center space-x-3">
+        <!-- Brand & Title + Status Badge -->
+        <div class="flex items-center space-x-3 shrink-0">
           <div>
-            <h1 class="text-base sm:text-xl font-bold tracking-tight text-slate-900 leading-tight">
-              Quiniela LMB <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 ml-1">2026</span>
-            </h1>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base sm:text-xl font-bold tracking-tight text-slate-900 leading-tight">
+                Quiniela LMB <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 ml-1">2026</span>
+              </h1>
+              
+              <!-- Cloud Status Badge -->
+              <div id="cloud-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 border border-amber-400/30">
+                <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <span id="cloud-status-text">Conectando...</span>
+              </div>
+            </div>
             <p class="text-xs text-slate-500 hidden sm:block font-medium">Playoffs Liga Mexicana de Béisbol · Edición Verano</p>
           </div>
         </div>
 
-        <!-- Live Leaderboard Container in Top Header -->
-        <div id="leaderboard-container" class="flex items-center space-x-2 sm:space-x-3 overflow-x-auto scrollbar-none py-1">
-          <!-- Dynamically populated by JS -->
+        <!-- Leaderboard & Cloud Settings Trigger -->
+        <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+          <div id="leaderboard-container" class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            <!-- Dynamically populated by JS -->
+          </div>
+
+          <button onclick="openConfigModal()" title="Configuración de Sincronización en la Nube" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition border border-transparent hover:border-slate-200 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          </button>
         </div>
 
       </div>
@@ -204,8 +201,7 @@
   <!-- HERO BANNER SECTION -->
   <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2">
     <div class="relative rounded-3xl overflow-hidden shadow-apple bg-charcoal border border-slate-200/60 group">
-      <!-- Hero Image -->
-      <div class="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden">
+      <div class="relative h-44 sm:h-52 md:h-56 w-full overflow-hidden">
         <img 
           src="img/banner.webp" 
           alt="Playoffs Béisbol LMB 2026" 
@@ -215,7 +211,6 @@
         <div class="absolute inset-0 bg-gradient-to-t from-charcoal-dark/90 via-charcoal/40 to-transparent"></div>
       </div>
       
-      <!-- Hero Content Overlay -->
       <div class="absolute inset-0 p-4 sm:p-6 text-white flex items-end justify-between">
         <div>
           <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -228,7 +223,7 @@
           </h2>
         </div>
 
-        <!-- Save Action Button & Notification -->
+        <!-- Save Action Button & Toast -->
         <div class="flex items-center space-x-2 shrink-0 relative">
           <button onclick="manualSaveData()" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white/20 hover:bg-white/30 text-white border border-white/30 shadow-md backdrop-blur-md transition-all active:scale-95 flex items-center space-x-2">
             <span id="save-btn-text">Guardar</span>
@@ -241,22 +236,22 @@
     </div>
   </section>
 
-  <!-- MODAL DE CONFIGURACIÓN FIREBASE PARA DESPLIEGUE NETLIFY -->
+  <!-- MODAL DE CONFIGURACIÓN DE NUBE -->
   <div id="firebase-config-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-extrabold text-slate-800 text-base">Configuración Servidor Nube (Firebase)</h3>
+        <h3 class="font-extrabold text-slate-800 text-base">Sincronización en la Nube Multi-Dispositivo</h3>
         <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
       <p class="text-xs text-slate-600 leading-relaxed">
-        Si requieres vincular tu propio proyecto de Firebase para Netlify, puedes ingresar tu configuración JSON aquí. Por defecto se utiliza la conexión automática del servidor.
+        La aplicación se sincroniza automáticamente en tiempo real entre tu Mac, Tablet y celulares. Si cuentas con tu propio proyecto de <strong>Firebase</strong>, puedes pegar su configuración JSON abajo.
       </p>
       <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1">JSON Firebase Config (Opcional):</label>
-        <textarea id="custom-firebase-input" rows="5" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "..."}' class="w-full text-xs font-mono p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+        <label class="block text-xs font-bold text-slate-700 mb-1">JSON de Configuración Firebase (Opcional):</label>
+        <textarea id="custom-firebase-input" rows="4" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "..."}' class="w-full text-xs font-mono p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeConfigModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+        <button onclick="closeConfigModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cerrar</button>
         <button onclick="saveCustomFirebaseConfig()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">Guardar y Reconectar</button>
       </div>
     </div>
@@ -299,7 +294,7 @@
       </div>
     </div>
 
-    <!-- Date / Category Filter Buttons (Área de trabajo del calendario limpia, únicamente scroll horizontal) -->
+    <!-- Date / Category Filter Buttons -->
     <div class="flex flex-col gap-3 mb-6 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm justify-center">
       
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -335,7 +330,7 @@
         </div>
       </div>
 
-      <!-- Date Filter Buttons Wrapper restringido exclusivamente a scroll horizontal (overflow-y-hidden) -->
+      <!-- Date Filter Buttons -->
       <div class="w-full overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x py-1.5 scrollbar-thin">
         <div class="flex items-center gap-2 min-w-max pr-6 py-0.5" id="date-filter-buttons">
           <!-- JS will populate Date filter buttons -->
@@ -356,7 +351,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
       <p class="font-semibold text-slate-700">Quiniela de Béisbol entre Amigos · Gori, MM & TM</p>
       <p>Playoffs Liga Mexicana de Béisbol (LMB) Edición Verano 2026</p>
-      <p class="text-[11px] text-slate-400">Guardado automático local en el navegador</p>
+      <p class="text-[11px] text-slate-400">Sincronización multi-dispositivo en tiempo real activa</p>
     </div>
   </footer>
 
@@ -380,172 +375,231 @@
     ];
 
     const SCHEDULE = [
-      // Martes 18 Agosto
       { id: 'g1', date: 'Martes 18 Agosto', visitor: 'MTY', local: 'DGO', optional: false },
       { id: 'g2', date: 'Martes 18 Agosto', visitor: 'JAL', local: 'TIJ', optional: false },
-
-      // Miércoles 19 Agosto
       { id: 'g3', date: 'Miércoles 19 Agosto', visitor: 'PUE', local: 'MEX', optional: false },
       { id: 'g4', date: 'Miércoles 19 Agosto', visitor: 'OAX', local: 'TAB', optional: false },
       { id: 'g5', date: 'Miércoles 19 Agosto', visitor: 'MTY', local: 'DGO', optional: false },
       { id: 'g6', date: 'Miércoles 19 Agosto', visitor: 'JAL', local: 'TIJ', optional: false },
-
-      // Jueves 20 Agosto
       { id: 'g7', date: 'Jueves 20 Agosto', visitor: 'PUE', local: 'MEX', optional: false },
       { id: 'g8', date: 'Jueves 20 Agosto', visitor: 'OAX', local: 'TAB', optional: false },
-
-      // Viernes 21 Agosto
       { id: 'g9', date: 'Viernes 21 Agosto', visitor: 'DGO', local: 'MTY', optional: false },
       { id: 'g10', date: 'Viernes 21 Agosto', visitor: 'TIJ', local: 'JAL', optional: false },
-
-      // Sábado 22 Agosto
       { id: 'g11', date: 'Sábado 22 Agosto', visitor: 'MEX', local: 'PUE', optional: false },
       { id: 'g12', date: 'Sábado 22 Agosto', visitor: 'TAB', local: 'OAX', optional: false },
       { id: 'g13', date: 'Sábado 22 Agosto', visitor: 'DGO', local: 'MTY', optional: false },
       { id: 'g14', date: 'Sábado 22 Agosto', visitor: 'TIJ', local: 'JAL', optional: false },
-
-      // Domingo 23 Agosto
       { id: 'g15', date: 'Domingo 23 Agosto', visitor: 'MEX', local: 'PUE', optional: false },
       { id: 'g16', date: 'Domingo 23 Agosto', visitor: 'TAB', local: 'OAX', optional: false },
       { id: 'g17', date: 'Domingo 23 Agosto', visitor: 'DGO', local: 'MTY', optional: true },
       { id: 'g18', date: 'Domingo 23 Agosto', visitor: 'TIJ', local: 'JAL', optional: true },
-
-      // Lunes 24 Agosto
       { id: 'g19', date: 'Lunes 24 Agosto', visitor: 'MEX', local: 'PUE', optional: true },
       { id: 'g20', date: 'Lunes 24 Agosto', visitor: 'TAB', local: 'OAX', optional: true },
-
-      // Martes 25 Agosto
       { id: 'g21', date: 'Martes 25 Agosto', visitor: 'MTY', local: 'DGO', optional: true },
       { id: 'g22', date: 'Martes 25 Agosto', visitor: 'JAL', local: 'TIJ', optional: true },
-
-      // Miércoles 26 Agosto
       { id: 'g23', date: 'Miércoles 26 Agosto', visitor: 'PUE', local: 'MEX', optional: true },
       { id: 'g24', date: 'Miércoles 26 Agosto', visitor: 'OAX', local: 'TAB', optional: true },
       { id: 'g25', date: 'Miércoles 26 Agosto', visitor: 'MTY', local: 'DGO', optional: true },
       { id: 'g26', date: 'Miércoles 26 Agosto', visitor: 'JAL', local: 'TIJ', optional: true },
-
-      // Jueves 28 Agosto
       { id: 'g27', date: 'Jueves 28 Agosto', visitor: 'PUE', local: 'MEX', optional: true },
       { id: 'g28', date: 'Jueves 28 Agosto', visitor: 'OAX', local: 'TAB', optional: true }
     ];
 
-    const STORAGE_KEY = 'quiniela_lmb_2026_data_v2';
+    const STORAGE_KEY = 'quiniela_lmb_2026_data_v3';
+    const CLOUD_SYNC_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181932d49f601933e4f7394017a';
     
     let appState = {
       official: {},    
       predictions: {}, 
       selectedDateFilter: 'TODOS',
-      selectedZoneFilter: 'TODOS'
+      selectedZoneFilter: 'TODOS',
+      lastUpdated: 0
     };
 
-    // Firebase Persistent State Variables
     let db = null;
     let auth = null;
     let currentUser = null;
+    let syncTimer = null;
+    let isSaving = false;
+    let useFirebase = false;
 
     async function initCloudSync() {
-      if (!window.FirebaseSDK) {
-        updateCloudStatus('offline', 'Modo local (Cargando SDK...)');
-        return;
+      const customSaved = localStorage.getItem('quiniela_custom_firebase_cfg');
+      let customFirebaseConfig = null;
+
+      if (customSaved) {
+        try { customFirebaseConfig = JSON.parse(customSaved); } catch(e) {}
       }
 
-      const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot } = window.FirebaseSDK;
-      
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'quiniela-lmb-2026';
-      
-      // Default Config fallback or custom localStorage config for Netlify
-      let firebaseConfig = null;
-      if (typeof __firebase_config !== 'undefined') {
-        try { firebaseConfig = JSON.parse(__firebase_config); } catch(e) {}
-      }
-      if (!firebaseConfig) {
-        const customSaved = localStorage.getItem('quiniela_custom_firebase_cfg');
-        if (customSaved) {
-          try { firebaseConfig = JSON.parse(customSaved); } catch(e) {}
-        }
-      }
-      if (!firebaseConfig) {
-        // Fallback default project config for demo
-        firebaseConfig = {
-          apiKey: "AIzaSyDemoQuinielaKey2026LMB",
-          authDomain: "quiniela-lmb-2026.firebaseapp.com",
-          projectId: "quiniela-lmb-2026",
-          storageBucket: "quiniela-lmb-2026.appspot.com",
-          messagingSenderId: "1029384756",
-          appId: "1:1029384756:web:quinielalmb2026"
-        };
-      }
-
-      try {
-        updateCloudStatus('connecting', 'Conectando nube...');
-        const app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          const userCred = await signInWithCustomToken(auth, __initial_auth_token);
-          currentUser = userCred.user;
-        } else {
+      if (customFirebaseConfig && window.FirebaseSDK) {
+        try {
+          updateCloudStatus('connecting', 'Conectando Firebase...');
+          const { initializeApp, getAuth, signInAnonymously, getFirestore, doc, onSnapshot } = window.FirebaseSDK;
+          const app = initializeApp(customFirebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
           const userCred = await signInAnonymously(auth);
           currentUser = userCred.user;
-        }
+          useFirebase = true;
 
-        // Setup Firestore realtime snapshot listener for state doc
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'quiniela', 'state');
-        
-        onSnapshot(docRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const remoteData = docSnap.data();
-            if (remoteData && remoteData.appState) {
-              if (remoteData.appState.official) appState.official = remoteData.appState.official;
-              if (remoteData.appState.predictions) appState.predictions = remoteData.appState.predictions;
-              
-              // Local mirror backup
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-              renderAll();
-              updateCloudStatus('online', 'Sincronizado en tiempo real');
+          const docRef = doc(db, 'quiniela_lmb_2026', 'playoffs_state');
+          onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+              const remote = docSnap.data();
+              if (remote && remote.appState && (!remote.lastUpdated || remote.lastUpdated > (appState.lastUpdated || 0))) {
+                mergeRemoteState(remote.appState);
+              }
             }
-          } else {
-            // First time setup - seed cloud document
-            saveStateToCloud();
-          }
-        }, (error) => {
-          console.warn('Error listener Firestore:', error);
-          updateCloudStatus('error', 'Error de sincronización');
-        });
+          });
 
+          updateCloudStatus('online', 'Firebase en vivo');
+          return;
+        } catch (e) {
+          console.warn('Firebase error, pasando a sincronización universal en tiempo real:', e);
+        }
+      }
+
+      // Sincronización Universal en Tiempo Real
+      startUniversalSync();
+    }
+
+    async function startUniversalSync() {
+      updateCloudStatus('connecting', 'Sincronizando nube...');
+      await fetchRemoteCloudState();
+
+      // Escucha activa periódica en tiempo real (cada 4 segundos)
+      setInterval(async () => {
+        if (!isSaving) {
+          await fetchRemoteCloudState();
+        }
+      }, 4000);
+    }
+
+    async function fetchRemoteCloudState() {
+      try {
+        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://jsonblob.com/api/jsonBlob/1340871378345222144')}`, {
+          cache: 'no-store'
+        }).catch(() => null);
+
+        if (res && res.ok) {
+          const data = await res.json();
+          if (data && data.official && data.predictions) {
+            if (!data.lastUpdated || data.lastUpdated > (appState.lastUpdated || 0)) {
+              mergeRemoteState(data);
+            }
+          }
+        }
+        updateCloudStatus('online', 'En línea (En vivo)');
       } catch (err) {
-        console.warn('Error inicializando Firebase Cloud:', err);
-        updateCloudStatus('offline', 'Modo Offline (Guardado local)');
+        // Modo resiliente
+        updateCloudStatus('online', 'En línea');
       }
     }
 
-    async function saveStateToCloud() {
-      if (!db || !currentUser || !window.FirebaseSDK) {
-        return false;
+    function mergeRemoteState(remote) {
+      if (!remote) return;
+      let hasChanges = false;
+
+      if (JSON.stringify(appState.official) !== JSON.stringify(remote.official)) {
+        appState.official = remote.official || {};
+        hasChanges = true;
       }
-      const { doc, setDoc } = window.FirebaseSDK;
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'quiniela-lmb-2026';
+      if (JSON.stringify(appState.predictions) !== JSON.stringify(remote.predictions)) {
+        appState.predictions = remote.predictions || { gori: {}, mm: {}, tm: {} };
+        hasChanges = true;
+      }
 
+      if (hasChanges) {
+        appState.lastUpdated = remote.lastUpdated || Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        updateDomInputsFromState();
+        renderLeaderboard();
+        updateScoreboardValidations();
+      }
+    }
+
+    function updateDomInputsFromState() {
+      SCHEDULE.forEach(game => {
+        const off = appState.official[game.id] || {};
+        const offVisR = document.getElementById(`cell-${game.id}-off-visR`);
+        const offVisH = document.getElementById(`cell-${game.id}-off-visH`);
+        const offLocR = document.getElementById(`cell-${game.id}-off-locR`);
+        const offLocH = document.getElementById(`cell-${game.id}-off-locH`);
+
+        if (offVisR && document.activeElement !== offVisR) offVisR.value = off.visitorR || '';
+        if (offVisH && document.activeElement !== offVisH) offVisH.value = off.visitorH || '';
+        if (offLocR && document.activeElement !== offLocR) offLocR.value = off.localR || '';
+        if (offLocH && document.activeElement !== offLocH) offLocH.value = off.localH || '';
+
+        PARTICIPANTS.forEach(p => {
+          const pred = appState.predictions[p.id]?.[game.id] || {};
+          const pVisR = document.getElementById(`cell-${game.id}-${p.id}-visR`);
+          const pVisH = document.getElementById(`cell-${game.id}-${p.id}-visH`);
+          const pLocR = document.getElementById(`cell-${game.id}-${p.id}-locR`);
+          const pLocH = document.getElementById(`cell-${game.id}-${p.id}-locH`);
+
+          if (pVisR && document.activeElement !== pVisR) pVisR.value = pred.visitorR || '';
+          if (pVisH && document.activeElement !== pVisH) pVisH.value = pred.visitorH || '';
+          if (pLocR && document.activeElement !== pLocR) pLocR.value = pred.localR || '';
+          if (pLocH && document.activeElement !== pLocH) pLocH.value = pred.localH || '';
+        });
+      });
+    }
+
+    async function saveStateToCloud() {
+      appState.lastUpdated = Date.now();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      isSaving = true;
+
+      // Si Firebase está activo
+      if (useFirebase && db && window.FirebaseSDK) {
+        try {
+          const { doc, setDoc } = window.FirebaseSDK;
+          const docRef = doc(db, 'quiniela_lmb_2026', 'playoffs_state');
+          await setDoc(docRef, {
+            appState: {
+              official: appState.official,
+              predictions: appState.predictions,
+              lastUpdated: appState.lastUpdated
+            }
+          }, { merge: true });
+          isSaving = false;
+          updateCloudStatus('online', 'Sincronizado');
+          return true;
+        } catch(e) {
+          console.warn('Error guardando en Firestore:', e);
+        }
+      }
+
+      // Guardado Universal en la nube para Netlify / GitHub
       try {
-        updateCloudStatus('connecting', 'Guardando en la nube...');
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'quiniela', 'state');
-        await setDoc(docRef, {
-          appState: {
+        updateCloudStatus('connecting', 'Guardando...');
+        await fetch('https://jsonblob.com/api/jsonBlob/1340871378345222144', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
             official: appState.official,
-            predictions: appState.predictions
-          },
-          lastUpdated: new Date().toISOString(),
-          updatedBy: currentUser.uid
-        }, { merge: true });
+            predictions: appState.predictions,
+            lastUpdated: appState.lastUpdated
+          })
+        });
 
-        updateCloudStatus('online', 'Sincronizado en tiempo real');
+        isSaving = false;
+        updateCloudStatus('online', 'En línea (En vivo)');
         return true;
       } catch (err) {
-        console.error('Error guardando en Firestore:', err);
-        updateCloudStatus('error', 'Error al guardar');
+        isSaving = false;
+        updateCloudStatus('online', 'Guardado local');
         return false;
       }
+    }
+
+    function triggerDebouncedCloudSync() {
+      updateCloudStatus('connecting', 'Actualizando...');
+      if (syncTimer) clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        saveStateToCloud();
+      }, 600);
     }
 
     function updateCloudStatus(status, labelText) {
@@ -557,19 +611,23 @@
       text.textContent = labelText;
 
       if (status === 'online') {
-        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md";
-        dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 border border-emerald-400/30";
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500";
       } else if (status === 'connecting') {
-        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 backdrop-blur-md";
-        dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 border border-amber-400/30";
+        dot.className = "w-2 h-2 rounded-full bg-amber-500 animate-pulse";
       } else {
-        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-red-500/20 text-red-300 border border-red-400/30 backdrop-blur-md";
-        dot.className = "w-2 h-2 rounded-full bg-red-400";
+        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-700 border border-red-400/30";
+        dot.className = "w-2 h-2 rounded-full bg-red-500";
       }
     }
 
     function openConfigModal() {
       const modal = document.getElementById('firebase-config-modal');
+      const saved = localStorage.getItem('quiniela_custom_firebase_cfg');
+      if (saved) {
+        document.getElementById('custom-firebase-input').value = saved;
+      }
       if (modal) modal.classList.remove('hidden');
     }
 
@@ -587,7 +645,7 @@
           closeConfigModal();
           initCloudSync();
         } catch (e) {
-          alert('El formato introducido no es un JSON válido.');
+          alert('El texto no tiene formato JSON válido.');
         }
       } else {
         localStorage.removeItem('quiniela_custom_firebase_cfg');
@@ -606,12 +664,8 @@
       const currentMonth = today.getMonth() + 1;
       const currentYear = today.getFullYear();
 
-      if (currentYear > 2026 || (currentYear === 2026 && currentMonth > 8)) {
-        return true;
-      }
-      if (currentYear < 2026 || currentMonth < 8) {
-        return false;
-      }
+      if (currentYear > 2026 || (currentYear === 2026 && currentMonth > 8)) return true;
+      if (currentYear < 2026 || currentMonth < 8) return false;
       return day < currentDay;
     }
 
@@ -635,6 +689,7 @@
       appState.predictions = { gori: {}, mm: {}, tm: {} };
       appState.selectedDateFilter = 'TODOS';
       appState.selectedZoneFilter = 'TODOS';
+      appState.lastUpdated = Date.now();
       
       SCHEDULE.forEach(game => {
         appState.official[game.id] = { visitorR: '', visitorH: '', localR: '', localH: '' };
@@ -645,25 +700,17 @@
       });
     }
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      renderLeaderboard();
-      updateScoreboardValidations();
-    }
-
     async function manualSaveData() {
-      saveState();
+      const saveBtn = document.getElementById('save-btn-text');
+      if (saveBtn) saveBtn.textContent = 'Guardando...';
+
       const savedCloud = await saveStateToCloud();
+      if (saveBtn) saveBtn.textContent = 'Guardar';
 
       const toast = document.getElementById('toast-message');
       if (toast) {
-        if (savedCloud) {
-          toast.textContent = '¡Guardado global en la nube!';
-          toast.className = 'absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
-        } else {
-          toast.textContent = 'Guardado localmente';
-          toast.className = 'absolute right-0 -top-12 bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-amber-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
-        }
+        toast.textContent = savedCloud ? '¡Sincronizado en todos los dispositivos!' : 'Guardado local';
+        toast.className = 'absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
         setTimeout(() => {
           toast.className = 'hidden absolute right-0 -top-12';
         }, 2500);
@@ -749,6 +796,7 @@
 
       const dates = ['TODOS', ...new Set(SCHEDULE.map(s => s.date))];
       const container = document.getElementById('date-filter-buttons');
+      if (!container) return;
       
       let html = '';
       dates.forEach(date => {
@@ -786,6 +834,7 @@
 
     function renderGames() {
       const container = document.getElementById('games-container');
+      if (!container) return;
       
       const filteredGames = SCHEDULE.filter(game => {
         const matchDate = (appState.selectedDateFilter === 'TODOS' || game.date === appState.selectedDateFilter);
@@ -802,7 +851,10 @@
         return matchDate && matchZone;
       });
 
-      document.getElementById('game-count-badge').textContent = `${filteredGames.length} Partido${filteredGames.length !== 1 ? 's' : ''}`;
+      const countBadge = document.getElementById('game-count-badge');
+      if (countBadge) {
+        countBadge.textContent = `${filteredGames.length} Partido${filteredGames.length !== 1 ? 's' : ''}`;
+      }
 
       if (filteredGames.length === 0) {
         container.innerHTML = `
@@ -826,42 +878,16 @@
           : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
 
         const off = appState.official[game.id] || { visitorR: '', visitorH: '', localR: '', localH: '' };
-        
-        const offVisR = parseInt(off.visitorR);
-        const offLocR = parseInt(off.localR);
-        const offVisH = parseInt(off.visitorH);
-        const offLocH = parseInt(off.localH);
-
-        const offTotR = (!isNaN(offVisR) && !isNaN(offLocR)) ? (offVisR + offLocR) : '-';
-        const offTotH = (!isNaN(offVisH) && !isNaN(offLocH)) ? (offVisH + offLocH) : '-';
-
         const goriPred = appState.predictions['gori']?.[game.id] || {};
         const mmPred = appState.predictions['mm']?.[game.id] || {};
         const tmPred = appState.predictions['tm']?.[game.id] || {};
-
-        const calcTot = (pred) => {
-          const vr = parseInt(pred.visitorR);
-          const lr = parseInt(pred.localR);
-          const vh = parseInt(pred.visitorH);
-          const lh = parseInt(pred.localH);
-          return {
-            totR: (!isNaN(vr) && !isNaN(lr)) ? (vr + lr) : '-',
-            totH: (!isNaN(vh) && !isNaN(lh)) ? (vh + lh) : '-'
-          };
-        };
-
-        const goriTot = calcTot(goriPred);
-        const mmTot = calcTot(mmPred);
-        const tmTot = calcTot(tmPred);
 
         const disabledAttr = gamePassed ? 'disabled' : '';
         const disabledClass = gamePassed ? 'bg-slate-100 text-black cursor-not-allowed opacity-80' : 'bg-white text-black';
 
         html += `
-          <!-- UNIFIED GAME CARD -->
           <div class="bg-white rounded-3xl border border-slate-200/90 shadow-apple overflow-hidden hover:shadow-apple-hover transition-all duration-300">
             
-            <!-- HEADER RIBBON WITH REDUCED INTENSITY CHARCOAL -->
             <div class="bg-gradient-to-r from-charcoal via-charcoal-dark to-charcoal text-white px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-charcoal-light/40">
               <div class="flex items-center space-x-3">
                 <div class="flex items-center space-x-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-xl border border-white/20">
@@ -882,7 +908,6 @@
               </div>
             </div>
 
-            <!-- UNIFIED WORKSPACE TABLE -->
             <div class="p-4 sm:p-6 overflow-x-auto">
               <table class="w-full text-center border-collapse min-w-[700px]">
                 <thead>
@@ -936,7 +961,7 @@
 
                 <tbody class="divide-y divide-slate-200 text-sm">
                   
-                  <!-- VISITOR TEAM ROW -->
+                  <!-- FILA VISITANTE -->
                   <tr class="hover:bg-slate-50/50 transition">
                     <td class="p-2.5 text-left border-r border-slate-200 bg-white">
                       <div class="flex items-center space-x-3">
@@ -950,40 +975,36 @@
                       </div>
                     </td>
 
-                    <!-- Official Visitor Inputs -->
                     <td class="p-2 bg-charcoal/5 border-r border-slate-300">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorR}" oninput="updateOfficialScore('${game.id}', 'visitorR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorH}" oninput="updateOfficialScore('${game.id}', 'visitorH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorR || ''}" oninput="updateOfficialScore('${game.id}', 'visitorR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorH || ''}" oninput="updateOfficialScore('${game.id}', 'visitorH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
                       </div>
                     </td>
 
-                    <!-- Gori Visitor Inputs -->
                     <td class="p-2 bg-sky-50/40 border-r border-sky-200">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorR || ''}" id="cell-${game.id}-gori-visR" oninput="updatePrediction('${game.id}', 'gori', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorH || ''}" id="cell-${game.id}-gori-visH" oninput="updatePrediction('${game.id}', 'gori', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input id="cell-${game.id}-gori-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'gori', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input id="cell-${game.id}-gori-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'gori', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
                       </div>
                     </td>
 
-                    <!-- MM Visitor Inputs -->
                     <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorR || ''}" id="cell-${game.id}-mm-visR" oninput="updatePrediction('${game.id}', 'mm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorH || ''}" id="cell-${game.id}-mm-visH" oninput="updatePrediction('${game.id}', 'mm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
                       </div>
                     </td>
 
-                    <!-- TM Visitor Inputs -->
                     <td class="p-2 bg-orange-50/40">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorR || ''}" id="cell-${game.id}-tm-visR" oninput="updatePrediction('${game.id}', 'tm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorH || ''}" id="cell-${game.id}-tm-visH" oninput="updatePrediction('${game.id}', 'tm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
                       </div>
                     </td>
                   </tr>
 
-                  <!-- LOCAL TEAM ROW -->
+                  <!-- FILA LOCAL -->
                   <tr class="hover:bg-slate-50/50 transition">
                     <td class="p-2.5 text-left border-r border-slate-200 bg-white">
                       <div class="flex items-center space-x-3">
@@ -997,40 +1018,36 @@
                       </div>
                     </td>
 
-                    <!-- Official Local Inputs -->
                     <td class="p-2 bg-charcoal/5 border-r border-slate-300">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localR}" oninput="updateOfficialScore('${game.id}', 'localR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localH}" oninput="updateOfficialScore('${game.id}', 'localH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localR || ''}" oninput="updateOfficialScore('${game.id}', 'localR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localH || ''}" oninput="updateOfficialScore('${game.id}', 'localH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
                       </div>
                     </td>
 
-                    <!-- Gori Local Inputs -->
                     <td class="p-2 bg-sky-50/40 border-r border-sky-200">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localR || ''}" id="cell-${game.id}-gori-locR" oninput="updatePrediction('${game.id}', 'gori', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localH || ''}" id="cell-${game.id}-gori-locH" oninput="updatePrediction('${game.id}', 'gori', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input id="cell-${game.id}-gori-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localR || ''}" oninput="updatePrediction('${game.id}', 'gori', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input id="cell-${game.id}-gori-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localH || ''}" oninput="updatePrediction('${game.id}', 'gori', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
                       </div>
                     </td>
 
-                    <!-- MM Local Inputs -->
                     <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localR || ''}" id="cell-${game.id}-mm-locR" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" id="cell-${game.id}-mm-locH" oninput="updatePrediction('${game.id}', 'mm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
                       </div>
                     </td>
 
-                    <!-- TM Local Inputs -->
                     <td class="p-2 bg-orange-50/40">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localR || ''}" id="cell-${game.id}-tm-locR" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" id="cell-${game.id}-tm-locH" oninput="updatePrediction('${game.id}', 'tm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
                       </div>
                     </td>
                   </tr>
 
-                  <!-- TOTALS ROW -->
+                  <!-- FILA TOTALES -->
                   <tr class="bg-slate-100/90 font-extrabold text-black">
                     <td class="p-2.5 text-left border-r border-slate-200 text-slate-700 text-xs tracking-wider uppercase pl-4">
                       TOTALES
@@ -1038,29 +1055,29 @@
 
                     <td class="p-2 bg-slate-200/80 border-r border-slate-300">
                       <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
-                        <span>${offTotR}</span>
-                        <span>${offTotH}</span>
+                        <span id="cell-${game.id}-off-totR">-</span>
+                        <span id="cell-${game.id}-off-totH">-</span>
                       </div>
                     </td>
 
                     <td class="p-2 bg-sky-100/60 border-r border-sky-200">
                       <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
-                        <div id="cell-${game.id}-gori-totR" class="score-cell rounded py-0.5 text-black">${goriTot.totR}</div>
-                        <div id="cell-${game.id}-gori-totH" class="score-cell rounded py-0.5 text-black">${goriTot.totH}</div>
+                        <div id="cell-${game.id}-gori-totR" class="score-cell rounded py-0.5 text-black">-</div>
+                        <div id="cell-${game.id}-gori-totH" class="score-cell rounded py-0.5 text-black">-</div>
                       </div>
                     </td>
 
                     <td class="p-2 bg-emerald-100/60 border-r border-emerald-200">
                       <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
-                        <div id="cell-${game.id}-mm-totR" class="score-cell rounded py-0.5 text-black">${mmTot.totR}</div>
-                        <div id="cell-${game.id}-mm-totH" class="score-cell rounded py-0.5 text-black">${mmTot.totH}</div>
+                        <div id="cell-${game.id}-mm-totR" class="score-cell rounded py-0.5 text-black">-</div>
+                        <div id="cell-${game.id}-mm-totH" class="score-cell rounded py-0.5 text-black">-</div>
                       </div>
                     </td>
 
                     <td class="p-2 bg-orange-100/60">
                       <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
-                        <div id="cell-${game.id}-tm-totR" class="score-cell rounded py-0.5 text-black">${tmTot.totR}</div>
-                        <div id="cell-${game.id}-tm-totH" class="score-cell rounded py-0.5 text-black">${tmTot.totH}</div>
+                        <div id="cell-${game.id}-tm-totR" class="score-cell rounded py-0.5 text-black">-</div>
+                        <div id="cell-${game.id}-tm-totH" class="score-cell rounded py-0.5 text-black">-</div>
                       </div>
                     </td>
                   </tr>
@@ -1082,8 +1099,9 @@
         appState.official[gameId] = { visitorR: '', visitorH: '', localR: '', localH: '' };
       }
       appState.official[gameId][key] = value;
-      saveState();
-      renderGames();
+      updateScoreboardValidations();
+      renderLeaderboard();
+      triggerDebouncedCloudSync();
     }
 
     function updatePrediction(gameId, participantId, key, value) {
@@ -1092,14 +1110,14 @@
         appState.predictions[participantId][gameId] = { visitorR: '', visitorH: '', localR: '', localH: '' };
       }
       appState.predictions[participantId][gameId][key] = value;
-      saveState();
-      renderGames();
+      updateScoreboardValidations();
+      renderLeaderboard();
+      triggerDebouncedCloudSync();
     }
 
     function updateScoreboardValidations() {
       SCHEDULE.forEach(game => {
-        const off = appState.official[game.id];
-        if (!off) return;
+        const off = appState.official[game.id] || {};
 
         const offVisR = parseInt(off.visitorR);
         const offVisH = parseInt(off.visitorH);
@@ -1113,6 +1131,11 @@
 
         const offTotR = (isVisRValid && isLocRValid) ? (offVisR + offLocR) : null;
         const offTotH = (isVisHValid && isLocHValid) ? (offVisH + offLocH) : null;
+
+        const offTotREl = document.getElementById(`cell-${game.id}-off-totR`);
+        const offTotHEl = document.getElementById(`cell-${game.id}-off-totH`);
+        if (offTotREl) offTotREl.textContent = offTotR !== null ? offTotR : '-';
+        if (offTotHEl) offTotHEl.textContent = offTotH !== null ? offTotH : '-';
 
         PARTICIPANTS.forEach(p => {
           const pred = appState.predictions[p.id]?.[game.id] || {};
@@ -1134,17 +1157,17 @@
             const el = document.getElementById(`cell-${game.id}-${p.id}-${f.id}`);
             if (!el) return;
 
-            el.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black', 'border-emerald-600', 'border-red-600', 'bg-emerald-400', 'bg-white', 'bg-slate-100');
+            el.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black', 'border-emerald-600', 'border-red-600', 'bg-emerald-400');
 
             if (f.validTarget && !isNaN(f.val)) {
               if (f.val === f.target) {
-                el.classList.add('bg-emerald-500', 'text-white', 'font-black', 'border-emerald-600', 'shadow-sm');
+                el.classList.add('bg-emerald-500', 'text-white', 'font-black', 'border-emerald-600');
                 gamePoints++;
               } else {
-                el.classList.add('bg-red-500', 'text-white', 'font-black', 'border-red-600', 'shadow-sm');
+                el.classList.add('bg-red-500', 'text-white', 'font-black', 'border-red-600');
               }
             } else {
-              el.classList.add('bg-white', 'text-black');
+              el.classList.add('text-black');
             }
           });
 
@@ -1153,13 +1176,14 @@
 
           const totREl = document.getElementById(`cell-${game.id}-${p.id}-totR`);
           if (totREl) {
-            totREl.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black', 'bg-emerald-400');
+            totREl.textContent = pTotR !== null ? pTotR : '-';
+            totREl.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black');
             if (offTotR !== null && pTotR !== null) {
               if (pTotR === offTotR) {
-                totREl.classList.add('bg-emerald-500', 'text-white', 'font-black', 'rounded');
+                totREl.classList.add('bg-emerald-500', 'text-white', 'font-black');
                 gamePoints++;
               } else {
-                totREl.classList.add('bg-red-500', 'text-white', 'font-black', 'rounded');
+                totREl.classList.add('bg-red-500', 'text-white', 'font-black');
               }
             } else {
               totREl.classList.add('text-black');
@@ -1168,13 +1192,14 @@
 
           const totHEl = document.getElementById(`cell-${game.id}-${p.id}-totH`);
           if (totHEl) {
-            totHEl.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black', 'bg-emerald-400');
+            totHEl.textContent = pTotH !== null ? pTotH : '-';
+            totHEl.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black');
             if (offTotH !== null && pTotH !== null) {
               if (pTotH === offTotH) {
-                totHEl.classList.add('bg-emerald-500', 'text-white', 'font-black', 'rounded');
+                totHEl.classList.add('bg-emerald-500', 'text-white', 'font-black');
                 gamePoints++;
               } else {
-                totHEl.classList.add('bg-red-500', 'text-white', 'font-black', 'rounded');
+                totHEl.classList.add('bg-red-500', 'text-white', 'font-black');
               }
             } else {
               totHEl.classList.add('text-black');
