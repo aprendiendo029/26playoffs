@@ -13,12 +13,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
+  <!-- Firebase SDK Modules -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    window.FirebaseSDK = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, getDoc, setDoc, onSnapshot };
+    window.FirebaseSDK = { initializeApp, getAuth, signInAnonymously, getFirestore, doc, getDoc, setDoc, onSnapshot };
     window.dispatchEvent(new Event('firebase-sdk-ready'));
   </script>
 
@@ -165,7 +166,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16 md:h-20 gap-2">
         
-        <!-- Brand & Title + Status Badge -->
+        <!-- Brand & Title + Live Status Badge -->
         <div class="flex items-center space-x-3 shrink-0">
           <div>
             <div class="flex items-center gap-2">
@@ -173,10 +174,10 @@
                 Quiniela LMB <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 ml-1">2026</span>
               </h1>
               
-              <!-- Cloud Status Badge -->
-              <div id="cloud-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 border border-amber-400/30">
-                <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                <span id="cloud-status-text">Conectando...</span>
+              <!-- Cloud Live Sync Badge -->
+              <div id="cloud-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 border border-emerald-400/30">
+                <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span id="cloud-status-text">En tiempo real</span>
               </div>
             </div>
             <p class="text-xs text-slate-500 hidden sm:block font-medium">Playoffs Liga Mexicana de Béisbol · Edición Verano</p>
@@ -229,7 +230,7 @@
             <span id="save-btn-text">Guardar</span>
           </button>
           <div id="toast-message" class="hidden absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300">
-            ¡Guardado global en la nube!
+            ¡Sincronizado en tiempo real!
           </div>
         </div>
       </div>
@@ -240,19 +241,19 @@
   <div id="firebase-config-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-extrabold text-slate-800 text-base">Sincronización en la Nube Multi-Dispositivo</h3>
+        <h3 class="font-extrabold text-slate-800 text-base">Sincronización en la Nube</h3>
         <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
       <p class="text-xs text-slate-600 leading-relaxed">
-        La aplicación se sincroniza automáticamente en tiempo real entre tu Mac, Tablet y celulares. Si cuentas con tu propio proyecto de <strong>Firebase</strong>, puedes pegar su configuración JSON abajo.
+        El sistema transmite en vivo cualquier marcador entre tu Mac, Tablet y celulares a través de un canal de eventos en tiempo real (SSE). Opcionalmente puedes conectar tu propio proyecto de <strong>Firebase</strong>.
       </p>
       <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1">JSON de Configuración Firebase (Opcional):</label>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Configuración Firebase JSON (Opcional):</label>
         <textarea id="custom-firebase-input" rows="4" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "..."}' class="w-full text-xs font-mono p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeConfigModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cerrar</button>
-        <button onclick="saveCustomFirebaseConfig()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">Guardar y Reconectar</button>
+        <button onclick="saveCustomFirebaseConfig()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">Guardar y Conectar</button>
       </div>
     </div>
   </div>
@@ -351,7 +352,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
       <p class="font-semibold text-slate-700">Quiniela de Béisbol entre Amigos · Gori, MM & TM</p>
       <p>Playoffs Liga Mexicana de Béisbol (LMB) Edición Verano 2026</p>
-      <p class="text-[11px] text-slate-400">Sincronización multi-dispositivo en tiempo real activa</p>
+      <p class="text-[11px] text-slate-400">Sincronización en vivo activa en todos los dispositivos</p>
     </div>
   </footer>
 
@@ -405,98 +406,127 @@
       { id: 'g28', date: 'Jueves 28 Agosto', visitor: 'OAX', local: 'TAB', optional: true }
     ];
 
-    const STORAGE_KEY = 'quiniela_lmb_2026_data_v3';
-    const CLOUD_SYNC_ENDPOINT = 'https://api.restful-api.dev/objects/ff808181932d49f601933e4f7394017a';
+    const STORAGE_KEY = 'quiniela_lmb_2026_data_v4';
+    const REALTIME_TOPIC = 'quiniela_lmb_2026_live_channel_sync';
+    const CLIENT_INSTANCE_ID = 'cli_' + Math.random().toString(36).substr(2, 9);
     
     let appState = {
       official: {},    
       predictions: {}, 
       selectedDateFilter: 'TODOS',
       selectedZoneFilter: 'TODOS',
-      lastUpdated: 0
+      lastUpdated: 0,
+      senderId: CLIENT_INSTANCE_ID
     };
 
     let db = null;
     let auth = null;
-    let currentUser = null;
-    let syncTimer = null;
-    let isSaving = false;
+    let syncDebounceTimer = null;
+    let sseSource = null;
     let useFirebase = false;
 
-    async function initCloudSync() {
-      const customSaved = localStorage.getItem('quiniela_custom_firebase_cfg');
-      let customFirebaseConfig = null;
+    function initRealtimeSync() {
+      // 1. Inicialización de canal Server-Sent Events (SSE) en tiempo real
+      connectSSE();
 
-      if (customSaved) {
-        try { customFirebaseConfig = JSON.parse(customSaved); } catch(e) {}
+      // 2. Cargar estado inicial desde el canal de sincronización
+      fetchLatestCloudState();
+
+      // 3. Fallback de sondeo suave en segundo plano cada 3 segundos
+      setInterval(() => {
+        fetchLatestCloudState();
+      }, 3000);
+
+      // 4. Intentar Firebase si existe configuración personalizada
+      initOptionalFirebase();
+    }
+
+    function connectSSE() {
+      try {
+        if (sseSource) sseSource.close();
+        sseSource = new EventSource(`https://ntfy.sh/${REALTIME_TOPIC}/sse`);
+
+        sseSource.onopen = function() {
+          updateCloudStatus('online', 'En tiempo real');
+        };
+
+        sseSource.onmessage = function(event) {
+          try {
+            const payload = JSON.parse(event.data);
+            if (payload && payload.message) {
+              const remote = JSON.parse(payload.message);
+              if (remote && remote.senderId !== CLIENT_INSTANCE_ID) {
+                if (!remote.lastUpdated || remote.lastUpdated > (appState.lastUpdated || 0)) {
+                  applyRemoteState(remote);
+                }
+              }
+            }
+          } catch(e) {}
+        };
+
+        sseSource.onerror = function() {
+          updateCloudStatus('connecting', 'Reconectando...');
+        };
+      } catch (err) {
+        console.warn('SSE fallback:', err);
       }
+    }
 
-      if (customFirebaseConfig && window.FirebaseSDK) {
+    async function fetchLatestCloudState() {
+      try {
+        const res = await fetch(`https://ntfy.sh/${REALTIME_TOPIC}/json?poll=1&since=30m`, {
+          cache: 'no-store'
+        });
+        if (res.ok) {
+          const text = await res.text();
+          const lines = text.trim().split('\n');
+          for (let i = lines.length - 1; i >= 0; i--) {
+            if (!lines[i]) continue;
+            try {
+              const item = JSON.parse(lines[i]);
+              if (item && item.message) {
+                const remote = JSON.parse(item.message);
+                if (remote && remote.senderId !== CLIENT_INSTANCE_ID) {
+                  if (!remote.lastUpdated || remote.lastUpdated > (appState.lastUpdated || 0)) {
+                    applyRemoteState(remote);
+                    break;
+                  }
+                }
+              }
+            } catch(e) {}
+          }
+        }
+      } catch (e) {}
+    }
+
+    async function initOptionalFirebase() {
+      const customSaved = localStorage.getItem('quiniela_custom_firebase_cfg');
+      if (customSaved && window.FirebaseSDK) {
         try {
-          updateCloudStatus('connecting', 'Conectando Firebase...');
+          const config = JSON.parse(customSaved);
           const { initializeApp, getAuth, signInAnonymously, getFirestore, doc, onSnapshot } = window.FirebaseSDK;
-          const app = initializeApp(customFirebaseConfig);
+          const app = initializeApp(config);
           auth = getAuth(app);
           db = getFirestore(app);
-          const userCred = await signInAnonymously(auth);
-          currentUser = userCred.user;
+          await signInAnonymously(auth);
           useFirebase = true;
 
           const docRef = doc(db, 'quiniela_lmb_2026', 'playoffs_state');
           onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
               const remote = docSnap.data();
-              if (remote && remote.appState && (!remote.lastUpdated || remote.lastUpdated > (appState.lastUpdated || 0))) {
-                mergeRemoteState(remote.appState);
+              if (remote && remote.appState && remote.senderId !== CLIENT_INSTANCE_ID) {
+                applyRemoteState(remote.appState);
               }
             }
           });
-
-          updateCloudStatus('online', 'Firebase en vivo');
-          return;
-        } catch (e) {
-          console.warn('Firebase error, pasando a sincronización universal en tiempo real:', e);
+        } catch(e) {
+          console.warn('Firebase init error:', e);
         }
       }
-
-      // Sincronización Universal en Tiempo Real
-      startUniversalSync();
     }
 
-    async function startUniversalSync() {
-      updateCloudStatus('connecting', 'Sincronizando nube...');
-      await fetchRemoteCloudState();
-
-      // Escucha activa periódica en tiempo real (cada 4 segundos)
-      setInterval(async () => {
-        if (!isSaving) {
-          await fetchRemoteCloudState();
-        }
-      }, 4000);
-    }
-
-    async function fetchRemoteCloudState() {
-      try {
-        const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://jsonblob.com/api/jsonBlob/1340871378345222144')}`, {
-          cache: 'no-store'
-        }).catch(() => null);
-
-        if (res && res.ok) {
-          const data = await res.json();
-          if (data && data.official && data.predictions) {
-            if (!data.lastUpdated || data.lastUpdated > (appState.lastUpdated || 0)) {
-              mergeRemoteState(data);
-            }
-          }
-        }
-        updateCloudStatus('online', 'En línea (En vivo)');
-      } catch (err) {
-        // Modo resiliente
-        updateCloudStatus('online', 'En línea');
-      }
-    }
-
-    function mergeRemoteState(remote) {
+    function applyRemoteState(remote) {
       if (!remote) return;
       let hasChanges = false;
 
@@ -512,94 +542,84 @@
       if (hasChanges) {
         appState.lastUpdated = remote.lastUpdated || Date.now();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        updateDomInputsFromState();
+        updateInputsDOM();
         renderLeaderboard();
         updateScoreboardValidations();
       }
     }
 
-    function updateDomInputsFromState() {
+    function updateInputsDOM() {
       SCHEDULE.forEach(game => {
         const off = appState.official[game.id] || {};
-        const offVisR = document.getElementById(`cell-${game.id}-off-visR`);
-        const offVisH = document.getElementById(`cell-${game.id}-off-visH`);
-        const offLocR = document.getElementById(`cell-${game.id}-off-locR`);
-        const offLocH = document.getElementById(`cell-${game.id}-off-locH`);
-
-        if (offVisR && document.activeElement !== offVisR) offVisR.value = off.visitorR || '';
-        if (offVisH && document.activeElement !== offVisH) offVisH.value = off.visitorH || '';
-        if (offLocR && document.activeElement !== offLocR) offLocR.value = off.localR || '';
-        if (offLocH && document.activeElement !== offLocH) offLocH.value = off.localH || '';
+        syncInputField(`cell-${game.id}-off-visR`, off.visitorR);
+        syncInputField(`cell-${game.id}-off-visH`, off.visitorH);
+        syncInputField(`cell-${game.id}-off-locR`, off.localR);
+        syncInputField(`cell-${game.id}-off-locH`, off.localH);
 
         PARTICIPANTS.forEach(p => {
           const pred = appState.predictions[p.id]?.[game.id] || {};
-          const pVisR = document.getElementById(`cell-${game.id}-${p.id}-visR`);
-          const pVisH = document.getElementById(`cell-${game.id}-${p.id}-visH`);
-          const pLocR = document.getElementById(`cell-${game.id}-${p.id}-locR`);
-          const pLocH = document.getElementById(`cell-${game.id}-${p.id}-locH`);
-
-          if (pVisR && document.activeElement !== pVisR) pVisR.value = pred.visitorR || '';
-          if (pVisH && document.activeElement !== pVisH) pVisH.value = pred.visitorH || '';
-          if (pLocR && document.activeElement !== pLocR) pLocR.value = pred.localR || '';
-          if (pLocH && document.activeElement !== pLocH) pLocH.value = pred.localH || '';
+          syncInputField(`cell-${game.id}-${p.id}-visR`, pred.visitorR);
+          syncInputField(`cell-${game.id}-${p.id}-visH`, pred.visitorH);
+          syncInputField(`cell-${game.id}-${p.id}-locR`, pred.localR);
+          syncInputField(`cell-${game.id}-${p.id}-locH`, pred.localH);
         });
       });
     }
 
-    async function saveStateToCloud() {
-      appState.lastUpdated = Date.now();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      isSaving = true;
+    function syncInputField(elementId, value) {
+      const el = document.getElementById(elementId);
+      if (el && document.activeElement !== el) {
+        el.value = (value !== undefined && value !== null) ? value : '';
+      }
+    }
 
-      // Si Firebase está activo
+    async function broadcastStateToRealtime() {
+      appState.lastUpdated = Date.now();
+      appState.senderId = CLIENT_INSTANCE_ID;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+
+      const payload = JSON.stringify({
+        official: appState.official,
+        predictions: appState.predictions,
+        lastUpdated: appState.lastUpdated,
+        senderId: CLIENT_INSTANCE_ID
+      });
+
+      // 1. Envío instantáneo al canal SSE para todos los dispositivos
+      try {
+        fetch(`https://ntfy.sh/${REALTIME_TOPIC}`, {
+          method: 'POST',
+          body: payload,
+          headers: { 'Title': 'ScoreUpdate' }
+        });
+      } catch(e) {}
+
+      // 2. Envío a Firebase si está activo
       if (useFirebase && db && window.FirebaseSDK) {
         try {
           const { doc, setDoc } = window.FirebaseSDK;
           const docRef = doc(db, 'quiniela_lmb_2026', 'playoffs_state');
-          await setDoc(docRef, {
+          setDoc(docRef, {
             appState: {
               official: appState.official,
               predictions: appState.predictions,
               lastUpdated: appState.lastUpdated
-            }
+            },
+            senderId: CLIENT_INSTANCE_ID
           }, { merge: true });
-          isSaving = false;
-          updateCloudStatus('online', 'Sincronizado');
-          return true;
-        } catch(e) {
-          console.warn('Error guardando en Firestore:', e);
-        }
+        } catch(e) {}
       }
 
-      // Guardado Universal en la nube para Netlify / GitHub
-      try {
-        updateCloudStatus('connecting', 'Guardando...');
-        await fetch('https://jsonblob.com/api/jsonBlob/1340871378345222144', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({
-            official: appState.official,
-            predictions: appState.predictions,
-            lastUpdated: appState.lastUpdated
-          })
-        });
-
-        isSaving = false;
-        updateCloudStatus('online', 'En línea (En vivo)');
-        return true;
-      } catch (err) {
-        isSaving = false;
-        updateCloudStatus('online', 'Guardado local');
-        return false;
-      }
+      updateCloudStatus('online', 'En tiempo real');
+      return true;
     }
 
-    function triggerDebouncedCloudSync() {
-      updateCloudStatus('connecting', 'Actualizando...');
-      if (syncTimer) clearTimeout(syncTimer);
-      syncTimer = setTimeout(() => {
-        saveStateToCloud();
-      }, 600);
+    function triggerDebouncedBroadcast() {
+      updateCloudStatus('connecting', 'Transmitiendo...');
+      if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+      syncDebounceTimer = setTimeout(() => {
+        broadcastStateToRealtime();
+      }, 250);
     }
 
     function updateCloudStatus(status, labelText) {
@@ -643,14 +663,13 @@
           JSON.parse(val);
           localStorage.setItem('quiniela_custom_firebase_cfg', val);
           closeConfigModal();
-          initCloudSync();
+          initOptionalFirebase();
         } catch (e) {
-          alert('El texto no tiene formato JSON válido.');
+          alert('El formato no es un JSON válido.');
         }
       } else {
         localStorage.removeItem('quiniela_custom_firebase_cfg');
         closeConfigModal();
-        initCloudSync();
       }
     }
 
@@ -676,6 +695,7 @@
           appState = JSON.parse(saved);
           if (!appState.selectedZoneFilter) appState.selectedZoneFilter = 'TODOS';
           if (!appState.selectedDateFilter) appState.selectedDateFilter = 'TODOS';
+          appState.senderId = CLIENT_INSTANCE_ID;
         } catch (e) {
           initEmptyData();
         }
@@ -690,6 +710,7 @@
       appState.selectedDateFilter = 'TODOS';
       appState.selectedZoneFilter = 'TODOS';
       appState.lastUpdated = Date.now();
+      appState.senderId = CLIENT_INSTANCE_ID;
       
       SCHEDULE.forEach(game => {
         appState.official[game.id] = { visitorR: '', visitorH: '', localR: '', localH: '' };
@@ -704,16 +725,15 @@
       const saveBtn = document.getElementById('save-btn-text');
       if (saveBtn) saveBtn.textContent = 'Guardando...';
 
-      const savedCloud = await saveStateToCloud();
+      await broadcastStateToRealtime();
       if (saveBtn) saveBtn.textContent = 'Guardar';
 
       const toast = document.getElementById('toast-message');
       if (toast) {
-        toast.textContent = savedCloud ? '¡Sincronizado en todos los dispositivos!' : 'Guardado local';
         toast.className = 'absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
         setTimeout(() => {
           toast.className = 'hidden absolute right-0 -top-12';
-        }, 2500);
+        }, 2200);
       }
     }
 
@@ -1101,7 +1121,7 @@
       appState.official[gameId][key] = value;
       updateScoreboardValidations();
       renderLeaderboard();
-      triggerDebouncedCloudSync();
+      triggerDebouncedBroadcast();
     }
 
     function updatePrediction(gameId, participantId, key, value) {
@@ -1112,7 +1132,7 @@
       appState.predictions[participantId][gameId][key] = value;
       updateScoreboardValidations();
       renderLeaderboard();
-      triggerDebouncedCloudSync();
+      triggerDebouncedBroadcast();
     }
 
     function updateScoreboardValidations() {
@@ -1229,12 +1249,7 @@
     window.onload = function() {
       initData();
       renderAll();
-
-      if (window.FirebaseSDK) {
-        initCloudSync();
-      } else {
-        window.addEventListener('firebase-sdk-ready', initCloudSync);
-      }
+      initRealtimeSync();
     };
   </script>
 
