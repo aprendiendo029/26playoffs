@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50 text-slate-900 antialiased selection:bg-blue-500 selection:text-white">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiniela Béisbol LMB 2026 | Playoffs Verano</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts - Inter for Apple-like pristine typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Estilos CSS Personalizados en carpeta css -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            // Charcoal reducido en intensidad al 30%
+            charcoal: {
+              DEFAULT: '#3b3e45',
+              dark: '#2d3036',
+              light: '#4f535c',
+            },
+            // Gori: Pastel Honolulu Blue
+            honolulu: {
+              50: '#f0f7ff',
+              100: '#e0f0fe',
+              200: '#bae2fd',
+              300: '#7ccbfd',
+              400: '#38bdf8',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              bg: '#e8f4fd',
+            },
+            // MM: Pastel Bottle Green
+            bottlegreen: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#16a34a',
+              600: '#15803d',
+              700: '#166534',
+              bg: '#eafaf1',
+            },
+            // TM: Tangerine Orange
+            tangerine: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#ea580c',
+              600: '#c2410c',
+              700: '#9a3412',
+              bg: '#fff4eb',
+            },
+            // Leader Flag Gold
+            gold: {
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+            }
+          },
+          boxShadow: {
+            'apple': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02)',
+            'apple-hover': '0 12px 30px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03)',
+            'apple-card': '0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Configuración de renderizado de tipografía fina estilo Apple */
+    body {
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Efecto Glassmorphic para el Encabezado Superior */
+    .apple-glass {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* Animación Resplandeciente para el Contorno de Líder (Dorado Palpitante) */
+    @keyframes leaderGlow {
+      0%, 100% {
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.5), inset 0 0 4px rgba(245, 158, 11, 0.2);
+        border-color: rgba(245, 158, 11, 0.9);
+      }
+      50% {
+        box-shadow: 0 0 18px rgba(245, 158, 11, 0.85), inset 0 0 8px rgba(245, 158, 11, 0.4);
+        border-color: rgba(251, 191, 36, 1);
+      }
+    }
+
+    .leader-badge-animated {
+      animation: leaderGlow 2s infinite ease-in-out;
+    }
+
+    /* Ocultar las flechas arriba/abajo en inputs numéricos y forzar TEXTO NEGRO SIEMPRE */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000 !important;
+    }
+
+    /* Forzar texto blanco visible cuando la casilla se valida como acierto (verde) o error (rojo) */
+    input[type=number].bg-emerald-500,
+    input[type=number].bg-red-500 {
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+    }
+
+    /* Transición suave para celdas de puntuación e inputs */
+    .score-cell {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Ocultar barra de desplazamiento manteniendo funcionalidad de scroll horizontal */
+    .scrollbar-none::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-none {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Clases de apoyo para temas de color */
+    .bg-honolulu-bg { background-color: #e8f4fd; }
+    .bg-honolulu-100 { background-color: #e0f0fe; }
+    .text-honolulu-700 { color: #075985; }
+    .border-honolulu-300 { border-color: #7ccbfd; }
+
+    .bg-bottlegreen-bg { background-color: #eafaf1; }
+    .bg-bottlegreen-100 { background-color: #dcfce7; }
+    .text-bottlegreen-700 { color: #166534; }
+    .border-bottlegreen-300 { border-color: #86efac; }
+
+    .bg-tangerine-bg { background-color: #fff4eb; }
+    .bg-tangerine-100 { background-color: #ffedd5; }
+    .text-tangerine-700 { color: #9a3412; }
+    .border-tangerine-300 { border-color: #fdba74; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-[#f5f5f7] text-[#1d1d1f]">
+
+  <!-- APPLE TOP NAVIGATION BAR & LIVE LEADERBOARD HEADER -->
+  <header class="sticky top-0 z-50 apple-glass border-b border-slate-200/80 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 md:h-20">
+        
+        <!-- Brand & Title (Sin el icono de pelota) -->
+        <div class="flex items-center space-x-3">
+          <div>
+            <h1 class="text-base sm:text-xl font-bold tracking-tight text-slate-900 leading-tight">
+              Quiniela LMB <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 ml-1">2026</span>
+            </h1>
+            <p class="text-xs text-slate-500 hidden sm:block font-medium">Playoffs Liga Mexicana de Béisbol · Edición Verano</p>
+          </div>
+        </div>
+
+        <!-- Live Leaderboard Container in Top Header -->
+        <div id="leaderboard-container" class="flex items-center space-x-2 sm:space-x-3 overflow-x-auto scrollbar-none py-1">
+          <!-- Dynamically populated by JS -->
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO BANNER SECTION -->
+  <section class="sticky top-16 z-40 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 transition-all">
+    <div class="relative rounded-3xl overflow-hidden shadow-apple bg-charcoal border border-slate-200/60 group">
+      <!-- Hero Image (Espacio ampliado 30%) -->
+      <div class="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden">
+        <img 
+          src="img/banner.webp" 
+          alt="Playoffs Béisbol LMB 2026" 
+          class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+          onerror="this.src='https://placehold.co/1200x400/3b3e45/ffffff?text=LMB+Playoffs+2026+Quiniela'"
+        />
+        <div class="absolute inset-0 bg-gradient-to-t from-charcoal-dark/90 via-charcoal/40 to-transparent"></div>
+      </div>
+      
+      <!-- Hero Content Overlay -->
+      <div class="absolute inset-0 p-4 sm:p-6 text-white flex items-end justify-between">
+        <div>
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-white/20 backdrop-blur-md text-white border border-white/20 tracking-wide uppercase">
+            Temporada Oficial 2026
+          </span>
+          <h2 class="text-lg sm:text-2xl font-extrabold tracking-tight text-white leading-tight mt-1">
+            Gran Batalla de Playoffs
+          </h2>
+        </div>
+
+        <!-- Save Action Button & Notification -->
+        <div class="flex items-center space-x-2 shrink-0 relative">
+          <button onclick="manualSaveData()" class="px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-transparent hover:bg-white/10 text-white border border-white/40 backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-2">
+            <span>Guardar</span>
+          </button>
+          <div id="toast-message" class="hidden absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300">
+            ¡Guardado exitosamente!
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTROL BAR & LEGEND SECTION -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+    
+    <!-- Info Bar: Colors & Scoring Rules -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-apple border border-slate-200/80 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm">
+        
+        <!-- Rules -->
+        <div class="flex flex-col justify-center md:border-r border-slate-200/80 md:pr-4">
+          <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wider">Reglas de Puntaje</h3>
+          <p class="text-slate-600 text-xs mt-1 leading-relaxed">Cada casilla acertada (Visitante R/H, Local R/H, Total R/H) otorga <span class="font-bold text-slate-800">1 Punto</span>.</p>
+        </div>
+
+        <!-- Legend Colors for Validation -->
+        <div class="flex flex-col justify-center md:border-r border-slate-200/80 md:pr-4">
+          <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wider">Validación de Aciertos</h3>
+          <div class="flex items-center space-x-2 mt-1.5">
+            <span class="px-2 py-0.5 rounded bg-emerald-400 text-black font-bold text-[11px] shadow-sm">Acierto</span>
+            <span class="text-slate-500 text-xs">Verde</span>
+            <span class="px-2 py-0.5 rounded bg-red-500 text-black font-bold text-[11px] shadow-sm ml-2">Fallo</span>
+            <span class="text-slate-500 text-xs">Rojo</span>
+          </div>
+        </div>
+
+        <!-- Participants Color Themes -->
+        <div class="flex flex-col justify-center">
+          <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wider">Participantes</h3>
+          <div class="flex items-center space-x-2 mt-1.5 text-[11px] font-semibold">
+            <span class="px-2 py-0.5 rounded bg-honolulu-100 text-honolulu-700 border border-honolulu-300">Gori</span>
+            <span class="px-2 py-0.5 rounded bg-bottlegreen-100 text-bottlegreen-700 border border-bottlegreen-300">MM</span>
+            <span class="px-2 py-0.5 rounded bg-tangerine-100 text-tangerine-700 border border-tangerine-300">TM</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Date / Category Filter Buttons (Área de trabajo del calendario limpia, únicamente scroll horizontal) -->
+    <div class="flex flex-col gap-3 mb-6 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm justify-center">
+      
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        
+        <!-- Zone Filter Buttons -->
+        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl shrink-0 self-start lg:self-auto" id="zone-filter-buttons">
+          <button 
+            onclick="setZoneFilter('TODOS')" 
+            id="zone-btn-TODOS"
+            class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-charcoal text-white shadow-sm"
+          >
+            Ambos (Todas)
+          </button>
+          <button 
+            onclick="setZoneFilter('Norte')" 
+            id="zone-btn-Norte"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all"
+          >
+            Zona Norte
+          </button>
+          <button 
+            onclick="setZoneFilter('Sur')" 
+            id="zone-btn-Sur"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all"
+          >
+            Zona Sur
+          </button>
+        </div>
+
+        <div class="text-xs text-slate-500 font-medium shrink-0 flex items-center justify-between lg:justify-end gap-2 border-t lg:border-t-0 pt-2 lg:pt-0 border-slate-100">
+          <span class="text-slate-400 font-normal">Filtro por fecha:</span>
+          <span id="game-count-badge" class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-bold border border-slate-200">0 Partidos</span>
+        </div>
+      </div>
+
+      <!-- Date Filter Buttons Wrapper restringido exclusivamente a scroll horizontal (overflow-y-hidden) -->
+      <div class="w-full overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x py-1.5 scrollbar-thin">
+        <div class="flex items-center gap-2 min-w-max pr-6 py-0.5" id="date-filter-buttons">
+          <!-- JS will populate Date filter buttons -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAIN GAMES CONTAINER GRID -->
+    <div id="games-container" class="space-y-8">
+      <!-- JS dynamically renders each game card here -->
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200/80 py-8 mt-12 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
+      <p class="font-semibold text-slate-700">Quiniela de Béisbol entre Amigos · Gori, MM & TM</p>
+      <p>Playoffs Liga Mexicana de Béisbol (LMB) Edición Verano 2026</p>
+      <p class="text-[11px] text-slate-400">Guardado automático local en el navegador</p>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    const TEAMS = {
+      MEX: { name: 'Diablos Rojos del México', logo: 'img/diablos.webp', zone: 'Sur' },
+      PUE: { name: 'Pericos de Puebla', logo: 'img/pericos.webp', zone: 'Sur' },
+      OAX: { name: 'Guerreros de Oaxaca', logo: 'img/guerreros.webp', zone: 'Sur' },
+      TAB: { name: 'Olmecas de Tabasco', logo: 'img/olmecas.webp', zone: 'Sur' },
+      TIJ: { name: 'Toros de Tijuana', logo: 'img/toros.webp', zone: 'Norte' },
+      JAL: { name: 'Charros de Jalisco', logo: 'img/charros.webp', zone: 'Norte' },
+      DGO: { name: 'Caliente de Durango', logo: 'img/caliente.webp', zone: 'Norte' },
+      MTY: { name: 'Sultanes de Monterrey', logo: 'img/sultanes.webp', zone: 'Norte' }
+    };
+
+    const PARTICIPANTS = [
+      { id: 'gori', name: 'Gori', themeHex: '#38bdf8' },
+      { id: 'mm', name: 'MM', themeHex: '#4ade80' },
+      { id: 'tm', name: 'TM', themeHex: '#fb923c' }
+    ];
+
+    const SCHEDULE = [
+      // Martes 18 Agosto
+      { id: 'g1', date: 'Martes 18 Agosto', visitor: 'MTY', local: 'DGO', optional: false },
+      { id: 'g2', date: 'Martes 18 Agosto', visitor: 'JAL', local: 'TIJ', optional: false },
+
+      // Miércoles 19 Agosto
+      { id: 'g3', date: 'Miércoles 19 Agosto', visitor: 'PUE', local: 'MEX', optional: false },
+      { id: 'g4', date: 'Miércoles 19 Agosto', visitor: 'OAX', local: 'TAB', optional: false },
+      { id: 'g5', date: 'Miércoles 19 Agosto', visitor: 'MTY', local: 'DGO', optional: false },
+      { id: 'g6', date: 'Miércoles 19 Agosto', visitor: 'JAL', local: 'TIJ', optional: false },
+
+      // Jueves 20 Agosto
+      { id: 'g7', date: 'Jueves 20 Agosto', visitor: 'PUE', local: 'MEX', optional: false },
+      { id: 'g8', date: 'Jueves 20 Agosto', visitor: 'OAX', local: 'TAB', optional: false },
+
+      // Viernes 21 Agosto
+      { id: 'g9', date: 'Viernes 21 Agosto', visitor: 'DGO', local: 'MTY', optional: false },
+      { id: 'g10', date: 'Viernes 21 Agosto', visitor: 'TIJ', local: 'JAL', optional: false },
+
+      // Sábado 22 Agosto
+      { id: 'g11', date: 'Sábado 22 Agosto', visitor: 'MEX', local: 'PUE', optional: false },
+      { id: 'g12', date: 'Sábado 22 Agosto', visitor: 'TAB', local: 'OAX', optional: false },
+      { id: 'g13', date: 'Sábado 22 Agosto', visitor: 'DGO', local: 'MTY', optional: false },
+      { id: 'g14', date: 'Sábado 22 Agosto', visitor: 'TIJ', local: 'JAL', optional: false },
+
+      // Domingo 23 Agosto
+      { id: 'g15', date: 'Domingo 23 Agosto', visitor: 'MEX', local: 'PUE', optional: false },
+      { id: 'g16', date: 'Domingo 23 Agosto', visitor: 'TAB', local: 'OAX', optional: false },
+      { id: 'g17', date: 'Domingo 23 Agosto', visitor: 'DGO', local: 'MTY', optional: true },
+      { id: 'g18', date: 'Domingo 23 Agosto', visitor: 'TIJ', local: 'JAL', optional: true },
+
+      // Lunes 24 Agosto
+      { id: 'g19', date: 'Lunes 24 Agosto', visitor: 'MEX', local: 'PUE', optional: true },
+      { id: 'g20', date: 'Lunes 24 Agosto', visitor: 'TAB', local: 'OAX', optional: true },
+
+      // Martes 25 Agosto
+      { id: 'g21', date: 'Martes 25 Agosto', visitor: 'MTY', local: 'DGO', optional: true },
+      { id: 'g22', date: 'Martes 25 Agosto', visitor: 'JAL', local: 'TIJ', optional: true },
+
+      // Miércoles 26 Agosto
+      { id: 'g23', date: 'Miércoles 26 Agosto', visitor: 'PUE', local: 'MEX', optional: true },
+      { id: 'g24', date: 'Miércoles 26 Agosto', visitor: 'OAX', local: 'TAB', optional: true },
+      { id: 'g25', date: 'Miércoles 26 Agosto', visitor: 'MTY', local: 'DGO', optional: true },
+      { id: 'g26', date: 'Miércoles 26 Agosto', visitor: 'JAL', local: 'TIJ', optional: true },
+
+      // Jueves 28 Agosto
+      { id: 'g27', date: 'Jueves 28 Agosto', visitor: 'PUE', local: 'MEX', optional: true },
+      { id: 'g28', date: 'Jueves 28 Agosto', visitor: 'OAX', local: 'TAB', optional: true }
+    ];
+
+    const STORAGE_KEY = 'quiniela_lmb_2026_data_v2';
+    
+    let appState = {
+      official: {},    
+      predictions: {}, 
+      selectedDateFilter: 'TODOS',
+      selectedZoneFilter: 'TODOS'
+    };
+
+    function isGamePassed(dateStr) {
+      const match = dateStr.match(/\d+/);
+      if (!match) return false;
+      const day = parseInt(match[0], 10);
+      
+      const today = new Date();
+      const currentDay = today.getDate();
+      const currentMonth = today.getMonth() + 1;
+      const currentYear = today.getFullYear();
+
+      if (currentYear > 2026 || (currentYear === 2026 && currentMonth > 8)) {
+        return true;
+      }
+      if (currentYear < 2026 || currentMonth < 8) {
+        return false;
+      }
+      return day < currentDay;
+    }
+
+    function initData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          appState = JSON.parse(saved);
+          if (!appState.selectedZoneFilter) appState.selectedZoneFilter = 'TODOS';
+          if (!appState.selectedDateFilter) appState.selectedDateFilter = 'TODOS';
+        } catch (e) {
+          initEmptyData();
+        }
+      } else {
+        initEmptyData();
+      }
+      saveState();
+    }
+
+    function initEmptyData() {
+      appState.official = {};
+      appState.predictions = { gori: {}, mm: {}, tm: {} };
+      appState.selectedDateFilter = 'TODOS';
+      appState.selectedZoneFilter = 'TODOS';
+      
+      SCHEDULE.forEach(game => {
+        appState.official[game.id] = { visitorR: '', visitorH: '', localR: '', localH: '' };
+        PARTICIPANTS.forEach(p => {
+          if (!appState.predictions[p.id]) appState.predictions[p.id] = {};
+          appState.predictions[p.id][game.id] = { visitorR: '', visitorH: '', localR: '', localH: '' };
+        });
+      });
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      renderLeaderboard();
+      updateScoreboardValidations();
+    }
+
+    function manualSaveData() {
+      saveState();
+      const toast = document.getElementById('toast-message');
+      if (toast) {
+        toast.classList.remove('hidden');
+        toast.classList.add('opacity-100');
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 2500);
+      }
+    }
+
+    function calculateParticipantScores() {
+      const scores = { gori: 0, mm: 0, tm: 0 };
+      SCHEDULE.forEach(game => {
+        const off = appState.official[game.id];
+        if (!off) return;
+
+        const offVisR = parseInt(off.visitorR);
+        const offVisH = parseInt(off.visitorH);
+        const offLocR = parseInt(off.localR);
+        const offLocH = parseInt(off.localH);
+
+        if (isNaN(offVisR) || isNaN(offVisH) || isNaN(offLocR) || isNaN(offLocH)) return;
+
+        const offTotR = offVisR + offLocR;
+        const offTotH = offVisH + offLocH;
+
+        PARTICIPANTS.forEach(p => {
+          const pred = appState.predictions[p.id]?.[game.id];
+          if (!pred) return;
+
+          const pVisR = parseInt(pred.visitorR);
+          const pVisH = parseInt(pred.visitorH);
+          const pLocR = parseInt(pred.localR);
+          const pLocH = parseInt(pred.localH);
+
+          if (!isNaN(pVisR) && pVisR === offVisR) scores[p.id]++;
+          if (!isNaN(pVisH) && pVisH === offVisH) scores[p.id]++;
+          if (!isNaN(pLocR) && pLocR === offLocR) scores[p.id]++;
+          if (!isNaN(pLocH) && pLocH === offLocH) scores[p.id]++;
+
+          if (!isNaN(pVisR) && !isNaN(pLocR) && (pVisR + pLocR === offTotR)) scores[p.id]++;
+          if (!isNaN(pVisH) && !isNaN(pLocH) && (pVisH + pLocH === offTotH)) scores[p.id]++;
+        });
+      });
+      return scores;
+    }
+
+    function renderLeaderboard() {
+      const container = document.getElementById('leaderboard-container');
+      if (!container) return;
+
+      const scores = calculateParticipantScores();
+      const maxScore = Math.max(...Object.values(scores));
+      
+      let html = '';
+      PARTICIPANTS.forEach(p => {
+        const score = scores[p.id] || 0;
+        const isLeader = score > 0 && score === maxScore;
+
+        html += `
+          <div class="relative flex items-center bg-white ${isLeader ? 'border-2 border-amber-400 leader-badge-animated' : 'border border-slate-200/90'} rounded-2xl p-1.5 sm:p-2 px-3 sm:px-4 shadow-apple transition-all overflow-hidden">
+            <div class="relative z-10 flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full shrink-0 shadow-sm" style="background-color: ${p.themeHex};"></span>
+              <span class="font-bold text-xs sm:text-sm text-slate-800">${p.name}</span>
+            </div>
+
+            <div class="relative z-10 ml-3 px-2.5 py-0.5 rounded-xl bg-slate-100 text-slate-900 font-extrabold text-sm sm:text-base border border-slate-200/80">
+              ${score} <span class="text-[10px] font-normal text-slate-500">pts</span>
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderFilters() {
+      ['TODOS', 'Norte', 'Sur'].forEach(zone => {
+        const btn = document.getElementById(`zone-btn-${zone}`);
+        if (btn) {
+          if (appState.selectedZoneFilter === zone) {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-charcoal text-white shadow-sm';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all';
+          }
+        }
+      });
+
+      const dates = ['TODOS', ...new Set(SCHEDULE.map(s => s.date))];
+      const container = document.getElementById('date-filter-buttons');
+      
+      let html = '';
+      dates.forEach(date => {
+        const isActive = appState.selectedDateFilter === date;
+        const passed = (date !== 'TODOS' && isGamePassed(date));
+
+        html += `
+          <button 
+            onclick="setDateFilter('${date}')"
+            class="px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all ${
+              isActive 
+                ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/80'
+            }"
+          >
+            ${date} ${passed ? '<span class="text-[10px] opacity-75">(Finalizado)</span>' : ''}
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function setZoneFilter(zone) {
+      appState.selectedZoneFilter = zone;
+      renderFilters();
+      renderGames();
+    }
+
+    function setDateFilter(date) {
+      appState.selectedDateFilter = date;
+      renderFilters();
+      renderGames();
+    }
+
+    function renderGames() {
+      const container = document.getElementById('games-container');
+      
+      const filteredGames = SCHEDULE.filter(game => {
+        const matchDate = (appState.selectedDateFilter === 'TODOS' || game.date === appState.selectedDateFilter);
+        const visZone = TEAMS[game.visitor].zone;
+        const locZone = TEAMS[game.local].zone;
+        
+        let matchZone = true;
+        if (appState.selectedZoneFilter === 'Norte') {
+          matchZone = (visZone === 'Norte' || locZone === 'Norte');
+        } else if (appState.selectedZoneFilter === 'Sur') {
+          matchZone = (visZone === 'Sur' || locZone === 'Sur');
+        }
+
+        return matchDate && matchZone;
+      });
+
+      document.getElementById('game-count-badge').textContent = `${filteredGames.length} Partido${filteredGames.length !== 1 ? 's' : ''}`;
+
+      if (filteredGames.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-apple">
+            <p class="text-slate-400 font-medium">No se encontraron partidos para la zona o fecha seleccionada.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+
+      filteredGames.forEach((game, index) => {
+        const visTeam = TEAMS[game.visitor];
+        const locTeam = TEAMS[game.local];
+        const gamePassed = isGamePassed(game.date);
+        
+        const gameZone = (visTeam.zone === locTeam.zone) ? `Zona ${visTeam.zone}` : `Interzona (${visTeam.zone} vs ${locTeam.zone})`;
+        const zoneBadgeClass = visTeam.zone === 'Norte' && locTeam.zone === 'Norte' 
+          ? 'bg-sky-500/20 text-sky-300 border border-sky-400/30' 
+          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+
+        const off = appState.official[game.id] || { visitorR: '', visitorH: '', localR: '', localH: '' };
+        
+        const offVisR = parseInt(off.visitorR);
+        const offLocR = parseInt(off.localR);
+        const offVisH = parseInt(off.visitorH);
+        const offLocH = parseInt(off.localH);
+
+        const offTotR = (!isNaN(offVisR) && !isNaN(offLocR)) ? (offVisR + offLocR) : '-';
+        const offTotH = (!isNaN(offVisH) && !isNaN(offLocH)) ? (offVisH + offLocH) : '-';
+
+        const goriPred = appState.predictions['gori']?.[game.id] || {};
+        const mmPred = appState.predictions['mm']?.[game.id] || {};
+        const tmPred = appState.predictions['tm']?.[game.id] || {};
+
+        const calcTot = (pred) => {
+          const vr = parseInt(pred.visitorR);
+          const lr = parseInt(pred.localR);
+          const vh = parseInt(pred.visitorH);
+          const lh = parseInt(pred.localH);
+          return {
+            totR: (!isNaN(vr) && !isNaN(lr)) ? (vr + lr) : '-',
+            totH: (!isNaN(vh) && !isNaN(lh)) ? (vh + lh) : '-'
+          };
+        };
+
+        const goriTot = calcTot(goriPred);
+        const mmTot = calcTot(mmPred);
+        const tmTot = calcTot(tmPred);
+
+        const disabledAttr = gamePassed ? 'disabled' : '';
+        const disabledClass = gamePassed ? 'bg-slate-100 text-black cursor-not-allowed opacity-80' : 'bg-white text-black';
+
+        html += `
+          <!-- UNIFIED GAME CARD -->
+          <div class="bg-white rounded-3xl border border-slate-200/90 shadow-apple overflow-hidden hover:shadow-apple-hover transition-all duration-300">
+            
+            <!-- HEADER RIBBON WITH REDUCED INTENSITY CHARCOAL -->
+            <div class="bg-gradient-to-r from-charcoal via-charcoal-dark to-charcoal text-white px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-charcoal-light/40">
+              <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-xl border border-white/20">
+                  <span class="text-xs sm:text-sm font-extrabold text-amber-300 tracking-wide">${game.date}</span>
+                </div>
+                <span class="text-xs font-bold text-slate-300">Juego #${index + 1}</span>
+                ${gamePassed ? `
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/30 uppercase tracking-wider">
+                    Bloqueado (Día Finalizado)
+                  </span>
+                ` : ''}
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <span class="px-3 py-0.5 rounded-full text-xs font-bold ${zoneBadgeClass}">
+                  ${gameZone}
+                </span>
+              </div>
+            </div>
+
+            <!-- UNIFIED WORKSPACE TABLE -->
+            <div class="p-4 sm:p-6 overflow-x-auto">
+              <table class="w-full text-center border-collapse min-w-[700px]">
+                <thead>
+                  <tr class="text-xs font-bold border-b border-slate-200">
+                    <th class="p-3 text-left w-52 bg-slate-50 rounded-tl-2xl border-r border-slate-200">
+                      <span class="text-slate-500 uppercase tracking-wider text-[11px] block">Equipos Enfrentados</span>
+                    </th>
+                    
+                    <th class="p-3 bg-charcoal text-white border-r border-slate-700 w-36">
+                      <span class="font-extrabold uppercase tracking-wider">Oficial</span>
+                    </th>
+
+                    <th class="p-3 bg-sky-50 text-sky-900 border-r border-sky-200 w-36">
+                      <div class="flex items-center justify-between px-1">
+                        <span class="font-extrabold">Gori</span>
+                        <span id="points-badge-gori-${game.id}" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-200 text-sky-800">0 pts</span>
+                      </div>
+                    </th>
+
+                    <th class="p-3 bg-emerald-50 text-emerald-900 border-r border-emerald-200 w-36">
+                      <div class="flex items-center justify-between px-1">
+                        <span class="font-extrabold">MM</span>
+                        <span id="points-badge-mm-${game.id}" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-800">0 pts</span>
+                      </div>
+                    </th>
+
+                    <th class="p-3 bg-orange-50 text-orange-900 rounded-tr-2xl w-36">
+                      <div class="flex items-center justify-between px-1">
+                        <span class="font-extrabold">TM</span>
+                        <span id="points-badge-tm-${game.id}" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-200 text-orange-800">0 pts</span>
+                      </div>
+                    </th>
+                  </tr>
+
+                  <tr class="text-[10px] font-black uppercase text-slate-500 bg-slate-100 border-b border-slate-200">
+                    <th class="p-1.5 text-left pl-4 text-slate-400 border-r border-slate-200">R = Carreras | H = Hits</th>
+                    <th class="p-1.5 bg-charcoal-dark text-slate-200 border-r border-slate-700">
+                      <div class="grid grid-cols-2 gap-1 text-center"><span>R</span><span>H</span></div>
+                    </th>
+                    <th class="p-1.5 bg-sky-100/80 text-sky-900 border-r border-sky-200">
+                      <div class="grid grid-cols-2 gap-1 text-center"><span>R</span><span>H</span></div>
+                    </th>
+                    <th class="p-1.5 bg-emerald-100/80 text-emerald-900 border-r border-emerald-200">
+                      <div class="grid grid-cols-2 gap-1 text-center"><span>R</span><span>H</span></div>
+                    </th>
+                    <th class="p-1.5 bg-orange-100/80 text-orange-900">
+                      <div class="grid grid-cols-2 gap-1 text-center"><span>R</span><span>H</span></div>
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-200 text-sm">
+                  
+                  <!-- VISITOR TEAM ROW -->
+                  <tr class="hover:bg-slate-50/50 transition">
+                    <td class="p-2.5 text-left border-r border-slate-200 bg-white">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-lg p-1 bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+                          <img src="${visTeam.logo}" alt="${visTeam.name}" class="max-h-full max-w-full object-contain" onerror="this.src='https://placehold.co/60x60/3b3e45/ffffff?text=${game.visitor}'" />
+                        </div>
+                        <div>
+                          <span class="font-extrabold text-slate-800 text-xs block leading-tight">${game.visitor}</span>
+                          <span class="text-[10px] text-slate-400 font-medium">Visitante · ${visTeam.zone}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Official Visitor Inputs -->
+                    <td class="p-2 bg-charcoal/5 border-r border-slate-300">
+                      <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorR}" oninput="updateOfficialScore('${game.id}', 'visitorR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorH}" oninput="updateOfficialScore('${game.id}', 'visitorH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                      </div>
+                    </td>
+
+                    <!-- Gori Visitor Inputs -->
+                    <td class="p-2 bg-sky-50/40 border-r border-sky-200">
+                      <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorR || ''}" id="cell-${game.id}-gori-visR" oninput="updatePrediction('${game.id}', 'gori', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorH || ''}" id="cell-${game.id}-gori-visH" oninput="updatePrediction('${game.id}', 'gori', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                      </div>
+                    </td>
+
+                    <!-- MM Visitor Inputs -->
+                    <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
+                      <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorR || ''}" id="cell-${game.id}-mm-visR" oninput="updatePrediction('${game.id}', 'mm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorH || ''}" id="cell-${game.id}-mm-visH" oninput="updatePrediction('${game.id}', 'mm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                      </div>
+                    </td>
+
+                    <!-- TM Visitor Inputs -->
+                    <td class="p-2 bg-orange-50/40">
+                      <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorR || ''}" id="cell-${game.id}-tm-visR" oninput="updatePrediction('${game.id}', 'tm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorH || ''}" id="cell-${game.id}-tm-visH" oninput="updatePrediction('${game.id}', 'tm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- LOCAL TEAM ROW -->
+                  <tr class="hover:bg-slate-50/50 transition">
+                    <td class="p-2.5 text-left border-r border-slate-200 bg-white">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-lg p-1 bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+                          <img src="${locTeam.logo}" alt="${locTeam.name}" class="max-h-full max-w-full object-contain" onerror="this.src='https://placehold.co/60x60/3b3e45/ffffff?text=${game.local}'" />
+                        </div>
+                        <div>
+                          <span class="font-extrabold text-slate-800 text-xs block leading-tight">${game.local}</span>
+                          <span class="text-[10px] text-slate-400 font-medium">Local · ${locTeam.zone}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Official Local Inputs -->
+                    <td class="p-2 bg-charcoal/5 border-r border-slate-300">
+                      <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localR}" oninput="updateOfficialScore('${game.id}', 'localR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localH}" oninput="updateOfficialScore('${game.id}', 'localH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                      </div>
+                    </td>
+
+                    <!-- Gori Local Inputs -->
+                    <td class="p-2 bg-sky-50/40 border-r border-sky-200">
+                      <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localR || ''}" id="cell-${game.id}-gori-locR" oninput="updatePrediction('${game.id}', 'gori', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localH || ''}" id="cell-${game.id}-gori-locH" oninput="updatePrediction('${game.id}', 'gori', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                      </div>
+                    </td>
+
+                    <!-- MM Local Inputs -->
+                    <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
+                      <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localR || ''}" id="cell-${game.id}-mm-locR" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" id="cell-${game.id}-mm-locH" oninput="updatePrediction('${game.id}', 'mm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                      </div>
+                    </td>
+
+                    <!-- TM Local Inputs -->
+                    <td class="p-2 bg-orange-50/40">
+                      <div class="grid grid-cols-2 gap-1.5">
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localR || ''}" id="cell-${game.id}-tm-locR" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" id="cell-${game.id}-tm-locH" oninput="updatePrediction('${game.id}', 'tm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- TOTALS ROW -->
+                  <tr class="bg-slate-100/90 font-extrabold text-black">
+                    <td class="p-2.5 text-left border-r border-slate-200 text-slate-700 text-xs tracking-wider uppercase pl-4">
+                      TOTALES
+                    </td>
+
+                    <td class="p-2 bg-slate-200/80 border-r border-slate-300">
+                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
+                        <span>${offTotR}</span>
+                        <span>${offTotH}</span>
+                      </div>
+                    </td>
+
+                    <td class="p-2 bg-sky-100/60 border-r border-sky-200">
+                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
+                        <div id="cell-${game.id}-gori-totR" class="score-cell rounded py-0.5 text-black">${goriTot.totR}</div>
+                        <div id="cell-${game.id}-gori-totH" class="score-cell rounded py-0.5 text-black">${goriTot.totH}</div>
+                      </div>
+                    </td>
+
+                    <td class="p-2 bg-emerald-100/60 border-r border-emerald-200">
+                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
+                        <div id="cell-${game.id}-mm-totR" class="score-cell rounded py-0.5 text-black">${mmTot.totR}</div>
+                        <div id="cell-${game.id}-mm-totH" class="score-cell rounded py-0.5 text-black">${mmTot.totH}</div>
+                      </div>
+                    </td>
+
+                    <td class="p-2 bg-orange-100/60">
+                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
+                        <div id="cell-${game.id}-tm-totR" class="score-cell rounded py-0.5 text-black">${tmTot.totR}</div>
+                        <div id="cell-${game.id}-tm-totH" class="score-cell rounded py-0.5 text-black">${tmTot.totH}</div>
+                      </div>
+                    </td>
+                  </tr>
+
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      updateScoreboardValidations();
+    }
+
+    function updateOfficialScore(gameId, key, value) {
+      if (!appState.official[gameId]) {
+        appState.official[gameId] = { visitorR: '', visitorH: '', localR: '', localH: '' };
+      }
+      appState.official[gameId][key] = value;
+      saveState();
+      renderGames();
+    }
+
+    function updatePrediction(gameId, participantId, key, value) {
+      if (!appState.predictions[participantId]) appState.predictions[participantId] = {};
+      if (!appState.predictions[participantId][gameId]) {
+        appState.predictions[participantId][gameId] = { visitorR: '', visitorH: '', localR: '', localH: '' };
+      }
+      appState.predictions[participantId][gameId][key] = value;
+      saveState();
+      renderGames();
+    }
+
+    function updateScoreboardValidations() {
+      SCHEDULE.forEach(game => {
+        const off = appState.official[game.id];
+        if (!off) return;
+
+        const offVisR = parseInt(off.visitorR);
+        const offVisH = parseInt(off.visitorH);
+        const offLocR = parseInt(off.localR);
+        const offLocH = parseInt(off.localH);
+
+        const isVisRValid = !isNaN(offVisR);
+        const isVisHValid = !isNaN(offVisH);
+        const isLocRValid = !isNaN(offLocR);
+        const isLocHValid = !isNaN(offLocH);
+
+        const offTotR = (isVisRValid && isLocRValid) ? (offVisR + offLocR) : null;
+        const offTotH = (isVisHValid && isLocHValid) ? (offVisH + offLocH) : null;
+
+        PARTICIPANTS.forEach(p => {
+          const pred = appState.predictions[p.id]?.[game.id] || {};
+          let gamePoints = 0;
+
+          const pVisR = parseInt(pred.visitorR);
+          const pVisH = parseInt(pred.visitorH);
+          const pLocR = parseInt(pred.localR);
+          const pLocH = parseInt(pred.localH);
+
+          const fields = [
+            { id: 'visR', val: pVisR, target: offVisR, validTarget: isVisRValid },
+            { id: 'visH', val: pVisH, target: offVisH, validTarget: isVisHValid },
+            { id: 'locR', val: pLocR, target: offLocR, validTarget: isLocRValid },
+            { id: 'locH', val: pLocH, target: offLocH, validTarget: isLocHValid }
+          ];
+
+          fields.forEach(f => {
+            const el = document.getElementById(`cell-${game.id}-${p.id}-${f.id}`);
+            if (!el) return;
+
+            el.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black', 'border-emerald-600', 'border-red-600', 'bg-emerald-400', 'bg-white', 'bg-slate-100');
+
+            if (f.validTarget && !isNaN(f.val)) {
+              if (f.val === f.target) {
+                el.classList.add('bg-emerald-500', 'text-white', 'font-black', 'border-emerald-600', 'shadow-sm');
+                gamePoints++;
+              } else {
+                el.classList.add('bg-red-500', 'text-white', 'font-black', 'border-red-600', 'shadow-sm');
+              }
+            } else {
+              el.classList.add('bg-white', 'text-black');
+            }
+          });
+
+          const pTotR = (!isNaN(pVisR) && !isNaN(pLocR)) ? (pVisR + pLocR) : null;
+          const pTotH = (!isNaN(pVisH) && !isNaN(pLocH)) ? (pVisH + pLocH) : null;
+
+          const totREl = document.getElementById(`cell-${game.id}-${p.id}-totR`);
+          if (totREl) {
+            totREl.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black', 'bg-emerald-400');
+            if (offTotR !== null && pTotR !== null) {
+              if (pTotR === offTotR) {
+                totREl.classList.add('bg-emerald-500', 'text-white', 'font-black', 'rounded');
+                gamePoints++;
+              } else {
+                totREl.classList.add('bg-red-500', 'text-white', 'font-black', 'rounded');
+              }
+            } else {
+              totREl.classList.add('text-black');
+            }
+          }
+
+          const totHEl = document.getElementById(`cell-${game.id}-${p.id}-totH`);
+          if (totHEl) {
+            totHEl.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black', 'bg-emerald-400');
+            if (offTotH !== null && pTotH !== null) {
+              if (pTotH === offTotH) {
+                totHEl.classList.add('bg-emerald-500', 'text-white', 'font-black', 'rounded');
+                gamePoints++;
+              } else {
+                totHEl.classList.add('bg-red-500', 'text-white', 'font-black', 'rounded');
+              }
+            } else {
+              totHEl.classList.add('text-black');
+            }
+          }
+
+          const ptsBadge = document.getElementById(`points-badge-${p.id}-${game.id}`);
+          if (ptsBadge) {
+            ptsBadge.textContent = `${gamePoints}/6 pts`;
+            if (gamePoints > 0) {
+              ptsBadge.className = "text-[10px] font-black px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 shadow-sm";
+            } else {
+              ptsBadge.className = "text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600";
+            }
+          }
+
+        });
+      });
+    }
+
+    function renderAll() {
+      renderLeaderboard();
+      renderFilters();
+      renderGames();
+    }
+
+    window.onload = function() {
+      initData();
+      renderAll();
+    };
+  </script>
+
+</body>
+</html>

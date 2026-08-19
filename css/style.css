@@ -1,0 +1,85 @@
+/* STREAMING_CHUNK:Configuring base typography and font rendering... /
+/ ==========================================================================
+Quiniela Béisbol LMB 2026 - Estilos CSS Personalizados
+Estética Apple Clean & Minimalista
+========================================================================== */
+
+/* Configuración de renderizado de tipografía fina estilo Apple */
+body {
+font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+}
+
+/* STREAMING_CHUNK:Styling glassmorphism header and visual effects... /
+/ Efecto Glassmorphic para el Encabezado Superior */
+.apple-glass {
+background: rgba(255, 255, 255, 0.82);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+}
+
+/* STREAMING_CHUNK:Defining animation keyframes for the leader badge... /
+/ Animación Resplandeciente para el Distintivo de Líder (Gold Pulse) */
+@keyframes leaderGlow {
+0%, 100% {
+transform: scale(1);
+box-shadow: 0 0 12px rgba(245, 158, 11, 0.6), 0 0 2px rgba(245, 158, 11, 0.4);
+}
+50% {
+transform: scale(1.05);
+box-shadow: 0 0 22px rgba(245, 158, 11, 0.9), 0 0 6px rgba(245, 158, 11, 0.7);
+}
+}
+
+.leader-badge-animated {
+animation: leaderGlow 2s infinite ease-in-out;
+}
+
+/* STREAMING_CHUNK:Customizing form inputs and removing spinner arrows... /
+/ Ocultar las flechas arriba/abajo (spinners) en inputs numéricos */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+
+input[type=number] {
+-moz-appearance: textfield;
+}
+
+/* STREAMING_CHUNK:Defining score cell transitions and scrollbar utilities... /
+/ Transición suave para celdas de puntuación e inputs */
+.score-cell {
+transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Ocultar barra de desplazamiento manteniendo funcionalidad de scroll horizontal */
+.scrollbar-none::-webkit-scrollbar {
+display: none;
+}
+.scrollbar-none {
+-ms-overflow-style: none;
+scrollbar-width: none;
+}
+
+/* STREAMING_CHUNK:Setting up participant custom color theme utility fallbacks... /
+/ Clases de colores personalizados para los participantes (Fallback fuera de Tailwind) */
+
+/* Gori: Honolulu Blue */
+.bg-honolulu-bg { background-color: #e8f4fd; }
+.bg-honolulu-100 { background-color: #e0f0fe; }
+.text-honolulu-700 { color: #075985; }
+.border-honolulu-300 { border-color: #7ccbfd; }
+
+/* MM: Bottle Green */
+.bg-bottlegreen-bg { background-color: #eafaf1; }
+.bg-bottlegreen-100 { background-color: #dcfce7; }
+.text-bottlegreen-700 { color: #166534; }
+.border-bottlegreen-300 { border-color: #86efac; }
+
+/* TM: Tangerine Orange */
+.bg-tangerine-bg { background-color: #fff4eb; }
+.bg-tangerine-100 { background-color: #ffedd5; }
+.text-tangerine-700 { color: #9a3412; }
+.border-tangerine-300 { border-color: #fdba74; }
