@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="es" class="h-full bg-slate-50 text-slate-900 antialiased selection:bg-blue-500 selection:text-white">
 <head>
   <meta charset="UTF-8">
@@ -15,6 +15,16 @@
   
   <!-- Estilos CSS Personalizados en carpeta css -->
   <link rel="stylesheet" href="css/style.css">
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Expose modules globally for main application script
+    window.FirebaseSDK = { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, getDoc, setDoc, onSnapshot };
+    window.dispatchEvent(new Event('firebase-sdk-ready'));
+  </script>
 
   <script>
     tailwind.config = {
@@ -192,9 +202,9 @@
   </header>
 
   <!-- HERO BANNER SECTION -->
-  <section class="sticky top-16 z-40 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 transition-all">
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2">
     <div class="relative rounded-3xl overflow-hidden shadow-apple bg-charcoal border border-slate-200/60 group">
-      <!-- Hero Image (Espacio ampliado 30%) -->
+      <!-- Hero Image -->
       <div class="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden">
         <img 
           src="img/banner.webp" 
@@ -208,9 +218,11 @@
       <!-- Hero Content Overlay -->
       <div class="absolute inset-0 p-4 sm:p-6 text-white flex items-end justify-between">
         <div>
-          <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-white/20 backdrop-blur-md text-white border border-white/20 tracking-wide uppercase">
-            Temporada Oficial 2026
-          </span>
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-white/15 backdrop-blur-md text-white/80 border border-white/20 tracking-wide uppercase">
+              Temporada Oficial 2026
+            </span>
+          </div>
           <h2 class="text-lg sm:text-2xl font-extrabold tracking-tight text-white leading-tight mt-1">
             Gran Batalla de Playoffs
           </h2>
@@ -218,16 +230,37 @@
 
         <!-- Save Action Button & Notification -->
         <div class="flex items-center space-x-2 shrink-0 relative">
-          <button onclick="manualSaveData()" class="px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-transparent hover:bg-white/10 text-white border border-white/40 backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 flex items-center space-x-2">
-            <span>Guardar</span>
+          <button onclick="manualSaveData()" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white/20 hover:bg-white/30 text-white border border-white/30 shadow-md backdrop-blur-md transition-all active:scale-95 flex items-center space-x-2">
+            <span id="save-btn-text">Guardar</span>
           </button>
           <div id="toast-message" class="hidden absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300">
-            ¡Guardado exitosamente!
+            ¡Guardado global en la nube!
           </div>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- MODAL DE CONFIGURACIÓN FIREBASE PARA DESPLIEGUE NETLIFY -->
+  <div id="firebase-config-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="font-extrabold text-slate-800 text-base">Configuración Servidor Nube (Firebase)</h3>
+        <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Si requieres vincular tu propio proyecto de Firebase para Netlify, puedes ingresar tu configuración JSON aquí. Por defecto se utiliza la conexión automática del servidor.
+      </p>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">JSON Firebase Config (Opcional):</label>
+        <textarea id="custom-firebase-input" rows="5" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "..."}' class="w-full text-xs font-mono p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeConfigModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cancelar</button>
+        <button onclick="saveCustomFirebaseConfig()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">Guardar y Reconectar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- CONTROL BAR & LEGEND SECTION -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
@@ -405,6 +438,164 @@
       selectedZoneFilter: 'TODOS'
     };
 
+    // Firebase Persistent State Variables
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+
+    async function initCloudSync() {
+      if (!window.FirebaseSDK) {
+        updateCloudStatus('offline', 'Modo local (Cargando SDK...)');
+        return;
+      }
+
+      const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, getFirestore, doc, setDoc, onSnapshot } = window.FirebaseSDK;
+      
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'quiniela-lmb-2026';
+      
+      // Default Config fallback or custom localStorage config for Netlify
+      let firebaseConfig = null;
+      if (typeof __firebase_config !== 'undefined') {
+        try { firebaseConfig = JSON.parse(__firebase_config); } catch(e) {}
+      }
+      if (!firebaseConfig) {
+        const customSaved = localStorage.getItem('quiniela_custom_firebase_cfg');
+        if (customSaved) {
+          try { firebaseConfig = JSON.parse(customSaved); } catch(e) {}
+        }
+      }
+      if (!firebaseConfig) {
+        // Fallback default project config for demo
+        firebaseConfig = {
+          apiKey: "AIzaSyDemoQuinielaKey2026LMB",
+          authDomain: "quiniela-lmb-2026.firebaseapp.com",
+          projectId: "quiniela-lmb-2026",
+          storageBucket: "quiniela-lmb-2026.appspot.com",
+          messagingSenderId: "1029384756",
+          appId: "1:1029384756:web:quinielalmb2026"
+        };
+      }
+
+      try {
+        updateCloudStatus('connecting', 'Conectando nube...');
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          const userCred = await signInWithCustomToken(auth, __initial_auth_token);
+          currentUser = userCred.user;
+        } else {
+          const userCred = await signInAnonymously(auth);
+          currentUser = userCred.user;
+        }
+
+        // Setup Firestore realtime snapshot listener for state doc
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'quiniela', 'state');
+        
+        onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const remoteData = docSnap.data();
+            if (remoteData && remoteData.appState) {
+              if (remoteData.appState.official) appState.official = remoteData.appState.official;
+              if (remoteData.appState.predictions) appState.predictions = remoteData.appState.predictions;
+              
+              // Local mirror backup
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+              renderAll();
+              updateCloudStatus('online', 'Sincronizado en tiempo real');
+            }
+          } else {
+            // First time setup - seed cloud document
+            saveStateToCloud();
+          }
+        }, (error) => {
+          console.warn('Error listener Firestore:', error);
+          updateCloudStatus('error', 'Error de sincronización');
+        });
+
+      } catch (err) {
+        console.warn('Error inicializando Firebase Cloud:', err);
+        updateCloudStatus('offline', 'Modo Offline (Guardado local)');
+      }
+    }
+
+    async function saveStateToCloud() {
+      if (!db || !currentUser || !window.FirebaseSDK) {
+        return false;
+      }
+      const { doc, setDoc } = window.FirebaseSDK;
+      const appId = typeof __app_id !== 'undefined' ? __app_id : 'quiniela-lmb-2026';
+
+      try {
+        updateCloudStatus('connecting', 'Guardando en la nube...');
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'quiniela', 'state');
+        await setDoc(docRef, {
+          appState: {
+            official: appState.official,
+            predictions: appState.predictions
+          },
+          lastUpdated: new Date().toISOString(),
+          updatedBy: currentUser.uid
+        }, { merge: true });
+
+        updateCloudStatus('online', 'Sincronizado en tiempo real');
+        return true;
+      } catch (err) {
+        console.error('Error guardando en Firestore:', err);
+        updateCloudStatus('error', 'Error al guardar');
+        return false;
+      }
+    }
+
+    function updateCloudStatus(status, labelText) {
+      const badge = document.getElementById('cloud-status-badge');
+      const dot = document.getElementById('cloud-status-dot');
+      const text = document.getElementById('cloud-status-text');
+      if (!badge || !dot || !text) return;
+
+      text.textContent = labelText;
+
+      if (status === 'online') {
+        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md";
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+      } else if (status === 'connecting') {
+        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 backdrop-blur-md";
+        dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+      } else {
+        badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold bg-red-500/20 text-red-300 border border-red-400/30 backdrop-blur-md";
+        dot.className = "w-2 h-2 rounded-full bg-red-400";
+      }
+    }
+
+    function openConfigModal() {
+      const modal = document.getElementById('firebase-config-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeConfigModal() {
+      const modal = document.getElementById('firebase-config-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function saveCustomFirebaseConfig() {
+      const val = document.getElementById('custom-firebase-input').value.trim();
+      if (val) {
+        try {
+          JSON.parse(val);
+          localStorage.setItem('quiniela_custom_firebase_cfg', val);
+          closeConfigModal();
+          initCloudSync();
+        } catch (e) {
+          alert('El formato introducido no es un JSON válido.');
+        }
+      } else {
+        localStorage.removeItem('quiniela_custom_firebase_cfg');
+        closeConfigModal();
+        initCloudSync();
+      }
+    }
+
     function isGamePassed(dateStr) {
       const match = dateStr.match(/\d+/);
       if (!match) return false;
@@ -437,7 +628,6 @@
       } else {
         initEmptyData();
       }
-      saveState();
     }
 
     function initEmptyData() {
@@ -461,14 +651,21 @@
       updateScoreboardValidations();
     }
 
-    function manualSaveData() {
+    async function manualSaveData() {
       saveState();
+      const savedCloud = await saveStateToCloud();
+
       const toast = document.getElementById('toast-message');
       if (toast) {
-        toast.classList.remove('hidden');
-        toast.classList.add('opacity-100');
+        if (savedCloud) {
+          toast.textContent = '¡Guardado global en la nube!';
+          toast.className = 'absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
+        } else {
+          toast.textContent = 'Guardado localmente';
+          toast.className = 'absolute right-0 -top-12 bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-amber-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
+        }
         setTimeout(() => {
-          toast.classList.add('hidden');
+          toast.className = 'hidden absolute right-0 -top-12';
         }, 2500);
       }
     }
@@ -1007,6 +1204,12 @@
     window.onload = function() {
       initData();
       renderAll();
+
+      if (window.FirebaseSDK) {
+        initCloudSync();
+      } else {
+        window.addEventListener('firebase-sdk-ready', initCloudSync);
+      }
     };
   </script>
 
