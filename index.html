@@ -13,14 +13,27 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
-  <!-- Firebase SDK Modules -->
+  <!-- Firebase SDK Oficial de Google -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    window.FirebaseSDK = { initializeApp, getAuth, signInAnonymously, getFirestore, doc, getDoc, setDoc, onSnapshot };
-    window.dispatchEvent(new Event('firebase-sdk-ready'));
+    // =========================================================================
+    // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE QUE COPIASTE DE TU CONSOLA:
+    // =========================================================================
+    const firebaseConfig = {
+  apiKey: "AIzaSyCUeZmhwVq6V57V5ZAZHVsJ5xS5MIxtHrw",
+  authDomain: "playoffs-6dcfd.firebaseapp.com",
+  projectId: "playoffs-6dcfd",
+  storageBucket: "playoffs-6dcfd.firebasestorage.app",
+  messagingSenderId: "782529203001",
+  appId: "1:782529203001:web:e08c04386ea9745792b6e8"
+};
+    // =========================================================================
+
+    window.FirebaseApp = { initializeApp, getAuth, signInAnonymously, getFirestore, doc, setDoc, onSnapshot, config: firebaseConfig };
+    window.dispatchEvent(new Event('firebase-ready'));
   </script>
 
   <script>
@@ -175,24 +188,20 @@
               </h1>
               
               <!-- Cloud Live Sync Badge -->
-              <div id="cloud-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 border border-emerald-400/30">
-                <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span id="cloud-status-text">Conectado en Vivo</span>
+              <div id="cloud-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 border border-amber-400/30">
+                <span id="cloud-status-dot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <span id="cloud-status-text">Conectando Firebase...</span>
               </div>
             </div>
             <p class="text-xs text-slate-500 hidden sm:block font-medium">Playoffs Liga Mexicana de Béisbol · Edición Verano</p>
           </div>
         </div>
 
-        <!-- Leaderboard & Cloud Settings Trigger -->
+        <!-- Leaderboard -->
         <div class="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
           <div id="leaderboard-container" class="flex items-center space-x-2 sm:space-x-3 shrink-0">
-            <!-- Dynamically populated by JS -->
+            <!-- Dinámico -->
           </div>
-
-          <button onclick="openConfigModal()" title="Configuración de Sincronización en la Nube" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition border border-transparent hover:border-slate-200 shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          </button>
         </div>
 
       </div>
@@ -224,39 +233,18 @@
           </h2>
         </div>
 
-        <!-- Save Action Button & Toast -->
+        <!-- Save Button & Toast -->
         <div class="flex items-center space-x-2 shrink-0 relative">
           <button onclick="manualSaveData()" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white/20 hover:bg-white/30 text-white border border-white/30 shadow-md backdrop-blur-md transition-all active:scale-95 flex items-center space-x-2">
             <span id="save-btn-text">Guardar</span>
           </button>
           <div id="toast-message" class="hidden absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300">
-            ¡Sincronizado en todos los dispositivos!
+            ¡Sincronizado en la nube!
           </div>
         </div>
       </div>
     </div>
   </section>
-
-  <!-- MODAL DE CONFIGURACIÓN DE NUBE -->
-  <div id="firebase-config-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200 space-y-4">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="font-extrabold text-slate-800 text-base">Sincronización en la Nube</h3>
-        <button onclick="closeConfigModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-      </div>
-      <p class="text-xs text-slate-600 leading-relaxed">
-        El sistema transmite en vivo cualquier marcador entre tu Mac, Tablet y celulares a través del canal en tiempo real. Si deseas usar tu propio proyecto oficial de <strong>Google Firebase</strong>, pega tu configuración JSON aquí:
-      </p>
-      <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1">Configuración Firebase JSON (Opcional):</label>
-        <textarea id="custom-firebase-input" rows="4" placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "..."}' class="w-full text-xs font-mono p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="closeConfigModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Cerrar</button>
-        <button onclick="saveCustomFirebaseConfig()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">Guardar y Reconectar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- CONTROL BAR & LEGEND SECTION -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
@@ -334,7 +322,7 @@
       <!-- Date Filter Buttons -->
       <div class="w-full overflow-x-auto overflow-y-hidden overscroll-x-contain touch-pan-x py-1.5 scrollbar-thin">
         <div class="flex items-center gap-2 min-w-max pr-6 py-0.5" id="date-filter-buttons">
-          <!-- JS will populate Date filter buttons -->
+          <!-- Dinámico -->
         </div>
       </div>
 
@@ -342,7 +330,7 @@
 
     <!-- MAIN GAMES CONTAINER GRID -->
     <div id="games-container" class="space-y-8">
-      <!-- JS dynamically renders each game card here -->
+      <!-- Dinámico -->
     </div>
 
   </main>
@@ -352,7 +340,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
       <p class="font-semibold text-slate-700">Quiniela de Béisbol entre Amigos · Gori, MM & TM</p>
       <p>Playoffs Liga Mexicana de Béisbol (LMB) Edición Verano 2026</p>
-      <p class="text-[11px] text-slate-400">Sincronización multi-dispositivo en tiempo real activa</p>
+      <p class="text-[11px] text-slate-400">Sincronización en tiempo real vía Google Firebase Firestore</p>
     </div>
   </footer>
 
@@ -406,9 +394,8 @@
       { id: 'g28', date: 'Jueves 28 Agosto', visitor: 'OAX', local: 'TAB', optional: true }
     ];
 
-    const STORAGE_KEY = 'quiniela_lmb_2026_data_v5';
-    const REALTIME_ROOM = 'quiniela_lmb_2026_room_master';
-    const CLIENT_INSTANCE_ID = 'dev_' + Math.random().toString(36).substr(2, 9);
+    const STORAGE_KEY = 'quiniela_lmb_2026_data_v6';
+    const DEVICE_ID = 'dev_' + Math.random().toString(36).substr(2, 9);
     
     let appState = {
       official: {},    
@@ -416,216 +403,117 @@
       selectedDateFilter: 'TODOS',
       selectedZoneFilter: 'TODOS',
       lastUpdated: 0,
-      senderId: CLIENT_INSTANCE_ID
+      senderId: DEVICE_ID
     };
 
-    let db = null;
-    let auth = null;
-    let syncDebounceTimer = null;
-    let sseSource = null;
-    let useFirebase = false;
+    let firestoreDB = null;
+    let saveTimeout = null;
 
-    function initRealtimeSync() {
-      // 1. Conexión a canal de transmisión en vivo (Server-Sent Events)
-      connectSSE();
+    async function initFirebaseConnection() {
+      if (!window.FirebaseApp) return;
 
-      // 2. Consulta de sincronización inicial
-      fetchLatestCloudState();
+      const { initializeApp, getAuth, signInAnonymously, getFirestore, doc, onSnapshot, config } = window.FirebaseApp;
 
-      // 3. Intervalo de sondeo en segundo plano (cada 3.5 segundos)
-      setInterval(() => {
-        fetchLatestCloudState();
-      }, 3500);
+      if (!config || !config.apiKey || config.apiKey.includes('PEGA_AQUI')) {
+        updateCloudStatus('offline', 'Requiere credenciales Firebase');
+        return;
+      }
 
-      // 4. Reconexión automática cuando se desbloquea el iPad o se cambia de pestaña
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-          fetchLatestCloudState();
-          connectSSE();
-        }
-      });
-
-      // 5. Soporte para Firebase si se introducen credenciales personalizadas
-      initOptionalFirebase();
-    }
-
-    function connectSSE() {
       try {
-        if (sseSource) {
-          try { sseSource.close(); } catch(e) {}
-        }
-        sseSource = new EventSource(`https://ntfy.sh/${REALTIME_ROOM}/sse`);
+        updateCloudStatus('connecting', 'Conectando a Firebase...');
+        const app = initializeApp(config);
+        const auth = getAuth(app);
+        firestoreDB = getFirestore(app);
 
-        sseSource.onopen = function() {
-          updateCloudStatus('online', 'Conectado en Vivo');
-        };
+        await signInAnonymously(auth);
 
-        sseSource.onmessage = function(event) {
-          try {
-            const payload = JSON.parse(event.data);
-            if (payload && payload.message) {
-              const remote = JSON.parse(payload.message);
-              if (remote && remote.senderId !== CLIENT_INSTANCE_ID) {
-                if (!remote.lastUpdated || remote.lastUpdated > (appState.lastUpdated || 0)) {
-                  applyRemoteState(remote);
-                }
-              }
+        // Escucha en tiempo real instantánea (WebSocket de Google)
+        const docRef = doc(firestoreDB, 'quiniela_lmb', 'playoffs_2026');
+        onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data && data.senderId !== DEVICE_ID) {
+              applyIncomingState(data);
             }
-          } catch(e) {}
-        };
-
-        sseSource.onerror = function() {
-          updateCloudStatus('connecting', 'Sincronizando...');
-        };
-      } catch (err) {}
-    }
-
-    async function fetchLatestCloudState() {
-      try {
-        const res = await fetch(`https://ntfy.sh/${REALTIME_ROOM}/json?poll=1&since=12h`, {
-          cache: 'no-store'
-        });
-        if (res.ok) {
-          const text = await res.text();
-          const lines = text.trim().split('\n');
-          for (let i = lines.length - 1; i >= 0; i--) {
-            if (!lines[i]) continue;
-            try {
-              const item = JSON.parse(lines[i]);
-              if (item && item.message) {
-                const remote = JSON.parse(item.message);
-                if (remote && remote.senderId !== CLIENT_INSTANCE_ID) {
-                  if (!remote.lastUpdated || remote.lastUpdated > (appState.lastUpdated || 0)) {
-                    applyRemoteState(remote);
-                    break;
-                  }
-                }
-              }
-            } catch(e) {}
           }
-        }
-      } catch (e) {}
-    }
+        }, (err) => {
+          console.error('Error Firestore:', err);
+          updateCloudStatus('error', 'Error en base de datos');
+        });
 
-    async function initOptionalFirebase() {
-      const customSaved = localStorage.getItem('quiniela_custom_firebase_cfg');
-      if (customSaved && window.FirebaseSDK) {
-        try {
-          const config = JSON.parse(customSaved);
-          const { initializeApp, getAuth, signInAnonymously, getFirestore, doc, onSnapshot } = window.FirebaseSDK;
-          const app = initializeApp(config);
-          auth = getAuth(app);
-          db = getFirestore(app);
-          await signInAnonymously(auth);
-          useFirebase = true;
-
-          const docRef = doc(db, 'quiniela_lmb_2026', 'playoffs_state');
-          onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-              const remote = docSnap.data();
-              if (remote && remote.appState && remote.senderId !== CLIENT_INSTANCE_ID) {
-                applyRemoteState(remote.appState);
-              }
-            }
-          });
-        } catch(e) {}
+        updateCloudStatus('online', '🟢 En Vivo (Firebase Conectado)');
+      } catch (err) {
+        console.error('Error al inicializar Firebase:', err);
+        updateCloudStatus('error', 'Credenciales inválidas');
       }
     }
 
-    function applyRemoteState(remote) {
-      if (!remote) return;
-      let hasChanges = false;
+    function applyIncomingState(data) {
+      if (!data) return;
+      if (data.official) appState.official = data.official;
+      if (data.predictions) appState.predictions = data.predictions;
+      appState.lastUpdated = data.lastUpdated || Date.now();
 
-      if (JSON.stringify(appState.official) !== JSON.stringify(remote.official)) {
-        appState.official = remote.official || {};
-        hasChanges = true;
-      }
-      if (JSON.stringify(appState.predictions) !== JSON.stringify(remote.predictions)) {
-        appState.predictions = remote.predictions || { gori: {}, mm: {}, tm: {} };
-        hasChanges = true;
-      }
-
-      if (hasChanges) {
-        appState.lastUpdated = remote.lastUpdated || Date.now();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-        updateInputsDOM();
-        renderLeaderboard();
-        updateScoreboardValidations();
-      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      updateInputsDOM();
+      renderLeaderboard();
+      updateScoreboardValidations();
     }
 
     function updateInputsDOM() {
       SCHEDULE.forEach(game => {
         const off = appState.official[game.id] || {};
-        syncInputField(`cell-${game.id}-off-visR`, off.visitorR);
-        syncInputField(`cell-${game.id}-off-visH`, off.visitorH);
-        syncInputField(`cell-${game.id}-off-locR`, off.localR);
-        syncInputField(`cell-${game.id}-off-locH`, off.localH);
+        syncInput(`cell-${game.id}-off-visR`, off.visitorR);
+        syncInput(`cell-${game.id}-off-visH`, off.visitorH);
+        syncInput(`cell-${game.id}-off-locR`, off.localR);
+        syncInput(`cell-${game.id}-off-locH`, off.localH);
 
         PARTICIPANTS.forEach(p => {
           const pred = appState.predictions[p.id]?.[game.id] || {};
-          syncInputField(`cell-${game.id}-${p.id}-visR`, pred.visitorR);
-          syncInputField(`cell-${game.id}-${p.id}-visH`, pred.visitorH);
-          syncInputField(`cell-${game.id}-${p.id}-locR`, pred.localR);
-          syncInputField(`cell-${game.id}-${p.id}-locH`, pred.localH);
+          syncInput(`cell-${game.id}-${p.id}-visR`, pred.visitorR);
+          syncInput(`cell-${game.id}-${p.id}-visH`, pred.visitorH);
+          syncInput(`cell-${game.id}-${p.id}-locR`, pred.localR);
+          syncInput(`cell-${game.id}-${p.id}-locH`, pred.localH);
         });
       });
     }
 
-    function syncInputField(elementId, value) {
-      const el = document.getElementById(elementId);
+    function syncInput(id, val) {
+      const el = document.getElementById(id);
       if (el && document.activeElement !== el) {
-        el.value = (value !== undefined && value !== null) ? value : '';
+        el.value = (val !== undefined && val !== null) ? val : '';
       }
     }
 
-    async function broadcastStateToRealtime() {
+    async function sendStateToFirebase() {
       appState.lastUpdated = Date.now();
-      appState.senderId = CLIENT_INSTANCE_ID;
+      appState.senderId = DEVICE_ID;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
 
-      const payload = JSON.stringify({
-        official: appState.official,
-        predictions: appState.predictions,
-        lastUpdated: appState.lastUpdated,
-        senderId: CLIENT_INSTANCE_ID
-      });
-
-      // Transmisión inmediata a todos los navegadores conectados
-      try {
-        fetch(`https://ntfy.sh/${REALTIME_ROOM}`, {
-          method: 'POST',
-          body: payload,
-          headers: { 'Title': 'QuinielaUpdate' }
-        });
-      } catch(e) {}
-
-      // Respaldo Firebase si está activo
-      if (useFirebase && db && window.FirebaseSDK) {
+      if (firestoreDB && window.FirebaseApp) {
         try {
-          const { doc, setDoc } = window.FirebaseSDK;
-          const docRef = doc(db, 'quiniela_lmb_2026', 'playoffs_state');
-          setDoc(docRef, {
-            appState: {
-              official: appState.official,
-              predictions: appState.predictions,
-              lastUpdated: appState.lastUpdated
-            },
-            senderId: CLIENT_INSTANCE_ID
-          }, { merge: true });
-        } catch(e) {}
+          const { doc, setDoc } = window.FirebaseApp;
+          const docRef = doc(firestoreDB, 'quiniela_lmb', 'playoffs_2026');
+          await setDoc(docRef, {
+            official: appState.official,
+            predictions: appState.predictions,
+            lastUpdated: appState.lastUpdated,
+            senderId: DEVICE_ID
+          });
+          updateCloudStatus('online', '🟢 En Vivo (Sincronizado)');
+          return true;
+        } catch (e) {
+          console.error('Error guardando en Firestore:', e);
+        }
       }
-
-      updateCloudStatus('online', 'Conectado en Vivo');
-      return true;
+      return false;
     }
 
-    function triggerDebouncedBroadcast() {
-      updateCloudStatus('connecting', 'Transmitiendo...');
-      if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
-      syncDebounceTimer = setTimeout(() => {
-        broadcastStateToRealtime();
-      }, 300);
+    function autoSaveDebounced() {
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        sendStateToFirebase();
+      }, 350);
     }
 
     function updateCloudStatus(status, labelText) {
@@ -645,37 +533,6 @@
       } else {
         badge.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-700 border border-red-400/30";
         dot.className = "w-2 h-2 rounded-full bg-red-500";
-      }
-    }
-
-    function openConfigModal() {
-      const modal = document.getElementById('firebase-config-modal');
-      const saved = localStorage.getItem('quiniela_custom_firebase_cfg');
-      if (saved) {
-        document.getElementById('custom-firebase-input').value = saved;
-      }
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function closeConfigModal() {
-      const modal = document.getElementById('firebase-config-modal');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function saveCustomFirebaseConfig() {
-      const val = document.getElementById('custom-firebase-input').value.trim();
-      if (val) {
-        try {
-          JSON.parse(val);
-          localStorage.setItem('quiniela_custom_firebase_cfg', val);
-          closeConfigModal();
-          initOptionalFirebase();
-        } catch (e) {
-          alert('El formato no es un JSON válido.');
-        }
-      } else {
-        localStorage.removeItem('quiniela_custom_firebase_cfg');
-        closeConfigModal();
       }
     }
 
@@ -701,7 +558,7 @@
           appState = JSON.parse(saved);
           if (!appState.selectedZoneFilter) appState.selectedZoneFilter = 'TODOS';
           if (!appState.selectedDateFilter) appState.selectedDateFilter = 'TODOS';
-          appState.senderId = CLIENT_INSTANCE_ID;
+          appState.senderId = DEVICE_ID;
         } catch (e) {
           initEmptyData();
         }
@@ -716,7 +573,7 @@
       appState.selectedDateFilter = 'TODOS';
       appState.selectedZoneFilter = 'TODOS';
       appState.lastUpdated = Date.now();
-      appState.senderId = CLIENT_INSTANCE_ID;
+      appState.senderId = DEVICE_ID;
       
       SCHEDULE.forEach(game => {
         appState.official[game.id] = { visitorR: '', visitorH: '', localR: '', localH: '' };
@@ -731,15 +588,16 @@
       const saveBtn = document.getElementById('save-btn-text');
       if (saveBtn) saveBtn.textContent = 'Guardando...';
 
-      await broadcastStateToRealtime();
+      const ok = await sendStateToFirebase();
       if (saveBtn) saveBtn.textContent = 'Guardar';
 
       const toast = document.getElementById('toast-message');
       if (toast) {
+        toast.textContent = ok ? '¡Sincronizado con todos los participantes!' : 'Guardado local (Falta configurar Firebase)';
         toast.className = 'absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
         setTimeout(() => {
           toast.className = 'hidden absolute right-0 -top-12';
-        }, 2200);
+        }, 2500);
       }
     }
 
@@ -1127,7 +985,7 @@
       appState.official[gameId][key] = value;
       updateScoreboardValidations();
       renderLeaderboard();
-      triggerDebouncedBroadcast();
+      autoSaveDebounced();
     }
 
     function updatePrediction(gameId, participantId, key, value) {
@@ -1138,7 +996,7 @@
       appState.predictions[participantId][gameId][key] = value;
       updateScoreboardValidations();
       renderLeaderboard();
-      triggerDebouncedBroadcast();
+      autoSaveDebounced();
     }
 
     function updateScoreboardValidations() {
@@ -1255,7 +1113,12 @@
     window.onload = function() {
       initData();
       renderAll();
-      initRealtimeSync();
+
+      if (window.FirebaseApp) {
+        initFirebaseConnection();
+      } else {
+        window.addEventListener('firebase-ready', initFirebaseConnection);
+      }
     };
   </script>
 
