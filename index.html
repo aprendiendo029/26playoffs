@@ -736,10 +736,10 @@
         const off = appState.official[game.id];
         if (!off) return;
 
-        const offVisR = parseInt(off.visitorR);
-        const offVisH = parseInt(off.visitorH);
-        const offLocR = parseInt(off.localR);
-        const offLocH = parseInt(off.localH);
+        const offVisR = parseInt(off.visitorR, 10);
+        const offVisH = parseInt(off.visitorH, 10);
+        const offLocR = parseInt(off.localR, 10);
+        const offLocH = parseInt(off.localH, 10);
 
         if (isNaN(offVisR) || isNaN(offVisH) || isNaN(offLocR) || isNaN(offLocH)) return;
 
@@ -750,10 +750,10 @@
           const pred = appState.predictions[p.id]?.[game.id];
           if (!pred) return;
 
-          const pVisR = parseInt(pred.visitorR);
-          const pVisH = parseInt(pred.visitorH);
-          const pLocR = parseInt(pred.localR);
-          const pLocH = parseInt(pred.localH);
+          const pVisR = parseInt(pred.visitorR, 10);
+          const pVisH = parseInt(pred.visitorH, 10);
+          const pLocR = parseInt(pred.localR, 10);
+          const pLocH = parseInt(pred.localH, 10);
 
           if (!isNaN(pVisR) && pVisR === offVisR) scores[p.id]++;
           if (!isNaN(pVisH) && pVisH === offVisH) scores[p.id]++;
@@ -1048,14 +1048,14 @@
                     <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
                       <div class="grid grid-cols-2 gap-1.5">
                         <input id="cell-${game.id}-mm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                        <input id="cell-${game.id}-mm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
                       </div>
                     </td>
 
                     <td class="p-2 bg-orange-50/40">
                       <div class="grid grid-cols-2 gap-1.5">
                         <input id="cell-${game.id}-tm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        <input id="cell-${game.id}-tm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
                       </div>
                     </td>
                   </tr>
@@ -1132,10 +1132,10 @@
       SCHEDULE.forEach(game => {
         const off = appState.official[game.id] || {};
 
-        const offVisR = parseInt(off.visitorR);
-        const offVisH = parseInt(off.visitorH);
-        const offLocR = parseInt(off.localR);
-        const offLocH = parseInt(off.localH);
+        const offVisR = parseInt(off.visitorR, 10);
+        const offVisH = parseInt(off.visitorH, 10);
+        const offLocR = parseInt(off.localR, 10);
+        const offLocH = parseInt(off.localH, 10);
 
         const isVisRValid = !isNaN(offVisR);
         const isVisHValid = !isNaN(offVisH);
@@ -1154,10 +1154,10 @@
           const pred = appState.predictions[p.id]?.[game.id] || {};
           let gamePoints = 0;
 
-          const pVisR = parseInt(pred.visitorR);
-          const pVisH = parseInt(pred.visitorH);
-          const pLocR = parseInt(pred.localR);
-          const pLocH = parseInt(pred.localH);
+          const pVisR = parseInt(pred.visitorR, 10);
+          const pVisH = parseInt(pred.visitorH, 10);
+          const pLocR = parseInt(pred.localR, 10);
+          const pLocH = parseInt(pred.localH, 10);
 
           const fields = [
             { id: 'visR', val: pVisR, target: offVisR, validTarget: isVisRValid },
