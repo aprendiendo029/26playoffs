@@ -17,7 +17,16 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      collection, 
+      addDoc, 
+      onSnapshot, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // =========================================================================
     // CONFIGURACIÓN DE FIREBASE OFICIAL
@@ -32,7 +41,20 @@
     };
     // =========================================================================
 
-    window.FirebaseApp = { initializeApp, getAuth, signInAnonymously, getFirestore, doc, setDoc, onSnapshot, config: firebaseConfig };
+    window.FirebaseApp = { 
+      initializeApp, 
+      getAuth, 
+      signInAnonymously, 
+      getFirestore, 
+      doc, 
+      setDoc, 
+      getDoc, 
+      collection, 
+      addDoc, 
+      onSnapshot, 
+      serverTimestamp, 
+      config: firebaseConfig 
+    };
     window.dispatchEvent(new Event('firebase-ready'));
   </script>
 
@@ -252,7 +274,7 @@
             <span id="save-btn-text">Guardar</span>
           </button>
           <div id="toast-message" class="hidden absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300">
-            ¡Sincronizado en la nube!
+            ¡Pronósticos y bitácora guardados con éxito!
           </div>
         </div>
       </div>
@@ -353,7 +375,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-2">
       <p class="font-semibold text-slate-700">Quiniela de Béisbol entre Amigos · Gori, MM & TM</p>
       <p>Playoffs Liga Mexicana de Béisbol (LMB) Edición Verano 2026</p>
-      <p class="text-[11px] text-slate-400">Sincronización en tiempo real vía Google Firebase Firestore</p>
+      <p class="text-[11px] text-slate-400">Sincronización en tiempo real con Bitácora de Auditoría vía Google Firebase</p>
     </div>
   </footer>
 
@@ -421,6 +443,52 @@
 
     let firestoreDB = null;
     let saveTimeout = null;
+
+    // --- Identificador de Sesión (idSesion) ---
+    function getOrCreateSessionId() {
+      let sessionId = localStorage.getItem('quiniela_id_sesion');
+      if (!sessionId) {
+        const chars = 'abcdef0123456789';
+        let randomStr = '';
+        for (let i = 0; i < 8; i++) {
+          randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        sessionId = `usr_${randomStr}`;
+        localStorage.setItem('quiniela_id_sesion', sessionId);
+      }
+      return sessionId;
+    }
+
+    // --- Detección de Dispositivo ---
+    function getDeviceDescription() {
+      const ua = navigator.userAgent;
+      let os = "Dispositivo Desconocido";
+      let browser = "Navegador";
+
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+        os = /iPad/.test(ua) ? "iPad" : "iPhone";
+      } else if (/Macintosh|Mac OS X/.test(ua)) {
+        os = "Mac";
+      } else if (/Windows NT/.test(ua)) {
+        os = "Windows";
+      } else if (/Android/.test(ua)) {
+        os = "Android";
+      } else if (/Linux/.test(ua)) {
+        os = "Linux";
+      }
+
+      if (/Edg\//.test(ua)) {
+        browser = "Edge";
+      } else if (/Chrome\//.test(ua) && !/Edg\//.test(ua)) {
+        browser = "Chrome";
+      } else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) {
+        browser = "Safari";
+      } else if (/Firefox\//.test(ua)) {
+        browser = "Firefox";
+      }
+
+      return `${os} / ${browser}`;
+    }
 
     async function initFirebaseConnection() {
       if (!window.FirebaseApp) return;
@@ -498,21 +566,63 @@
       }
     }
 
-    async function sendStateToFirebase() {
+    async function sendStateToFirebase(withAuditLog = false) {
       appState.lastUpdated = Date.now();
       appState.senderId = DEVICE_ID;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
 
       if (firestoreDB && window.FirebaseApp) {
         try {
-          const { doc, setDoc } = window.FirebaseApp;
+          const { doc, setDoc, getDoc, collection, addDoc, serverTimestamp } = window.FirebaseApp;
           const docRef = doc(firestoreDB, 'quiniela_lmb', 'playoffs_2026');
+
+          let valoresAnteriores = {};
+          if (withAuditLog) {
+            try {
+              const currentSnap = await getDoc(docRef);
+              if (currentSnap.exists()) {
+                const prev = currentSnap.data();
+                valoresAnteriores = {
+                  official: prev.official || {},
+                  predictions: prev.predictions || {}
+                };
+              }
+            } catch (readErr) {
+              console.warn('No se pudo leer estado anterior para bitácora:', readErr);
+            }
+          }
+
+          const valoresNuevos = {
+            official: JSON.parse(JSON.stringify(appState.official)),
+            predictions: JSON.parse(JSON.stringify(appState.predictions))
+          };
+
+          // 1. Actualización principal de la quiniela
           await setDoc(docRef, {
             official: appState.official,
             predictions: appState.predictions,
             lastUpdated: appState.lastUpdated,
             senderId: DEVICE_ID
           });
+
+          // 2. Registro inmediato en la bitácora (Audit Log)
+          if (withAuditLog) {
+            try {
+              const auditRef = collection(firestoreDB, 'quiniela_lmb', 'playoffs_2026', 'historial');
+              await addDoc(auditRef, {
+                fechaHora: serverTimestamp(),
+                autor: "Usuario Anónimo",
+                idSesion: getOrCreateSessionId(),
+                dispositivo: getDeviceDescription(),
+                origen: "Pagina_Web",
+                valoresAnteriores: valoresAnteriores,
+                valoresNuevos: valoresNuevos
+              });
+            } catch (auditErr) {
+              console.error('Error registrando bitácora:', auditErr);
+            }
+          }
+
           updateCloudStatus('online', '🟢 En Vivo (Sincronizado)');
           return true;
         } catch (e) {
@@ -525,7 +635,7 @@
     function autoSaveDebounced() {
       if (saveTimeout) clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
-        sendStateToFirebase();
+        sendStateToFirebase(false);
       }, 350);
     }
 
@@ -563,11 +673,11 @@
       if (currentYear > 2026 || (currentYear === 2026 && currentMonth > 8)) return true;
       if (currentYear < 2026 || currentMonth < 8) return false;
       
-      // Permite captura el día del juego y al día siguiente; se bloquea a partir del 2do día posterior
       return currentDay > (day + 1);
     }
 
     function initData() {
+      getOrCreateSessionId();
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
@@ -600,20 +710,23 @@
       });
     }
 
+    // --- Guardado Manual con Double-Write a Bitácora ---
     async function manualSaveData() {
       const saveBtn = document.getElementById('save-btn-text');
       if (saveBtn) saveBtn.textContent = 'Guardando...';
 
-      const ok = await sendStateToFirebase();
+      const ok = await sendStateToFirebase(true);
       if (saveBtn) saveBtn.textContent = 'Guardar';
 
       const toast = document.getElementById('toast-message');
       if (toast) {
-        toast.textContent = ok ? '¡Sincronizado con todos los participantes!' : 'Guardado local';
+        toast.textContent = ok 
+          ? '¡Pronósticos y bitácora guardados con éxito!' 
+          : 'Guardado en memoria local';
         toast.className = 'absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
         setTimeout(() => {
           toast.className = 'hidden absolute right-0 -top-12';
-        }, 2500);
+        }, 3000);
       }
     }
 
@@ -935,14 +1048,14 @@
                     <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
                       <div class="grid grid-cols-2 gap-1.5">
                         <input id="cell-${game.id}-mm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                        <input id="cell-${game.id}-mm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
                       </div>
                     </td>
 
                     <td class="p-2 bg-orange-50/40">
                       <div class="grid grid-cols-2 gap-1.5">
                         <input id="cell-${game.id}-tm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        <input id="cell-${game.id}-tm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
                       </div>
                     </td>
                   </tr>
