@@ -20,16 +20,16 @@
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // =========================================================================
-    // PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE QUE COPIASTE DE TU CONSOLA:
+    // CONFIGURACIÓN DE FIREBASE OFICIAL
     // =========================================================================
     const firebaseConfig = {
-  apiKey: "AIzaSyCUeZmhwVq6V57V5ZAZHVsJ5xS5MIxtHrw",
-  authDomain: "playoffs-6dcfd.firebaseapp.com",
-  projectId: "playoffs-6dcfd",
-  storageBucket: "playoffs-6dcfd.firebasestorage.app",
-  messagingSenderId: "782529203001",
-  appId: "1:782529203001:web:e08c04386ea9745792b6e8"
-};
+      apiKey: "AIzaSyCUeZmhwVq6V57V5ZAZHVsJ5xS5MIxtHrw",
+      authDomain: "playoffs-6dcfd.firebaseapp.com",
+      projectId: "playoffs-6dcfd",
+      storageBucket: "playoffs-6dcfd.firebasestorage.app",
+      messagingSenderId: "782529203001",
+      appId: "1:782529203001:web:e08c04386ea9745792b6e8"
+    };
     // =========================================================================
 
     window.FirebaseApp = { initializeApp, getAuth, signInAnonymously, getFirestore, doc, setDoc, onSnapshot, config: firebaseConfig };
@@ -138,10 +138,23 @@
       -webkit-text-fill-color: #000000 !important;
     }
 
-    input[type=number].bg-emerald-500,
-    input[type=number].bg-red-500 {
+    /* Resaltado completo de celdas con texto 100% visible */
+    input[type=number].cell-hit,
+    div.cell-hit {
+      background-color: #10b981 !important;
       color: #ffffff !important;
       -webkit-text-fill-color: #ffffff !important;
+      border-color: #059669 !important;
+      font-weight: 900 !important;
+    }
+
+    input[type=number].cell-miss,
+    div.cell-miss {
+      background-color: #ef4444 !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      border-color: #dc2626 !important;
+      font-weight: 900 !important;
     }
 
     .score-cell {
@@ -263,9 +276,9 @@
         <div class="flex flex-col justify-center md:border-r border-slate-200/80 md:pr-4">
           <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wider">Validación de Aciertos</h3>
           <div class="flex items-center space-x-2 mt-1.5">
-            <span class="px-2 py-0.5 rounded bg-emerald-400 text-black font-bold text-[11px] shadow-sm">Acierto</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-500 text-white font-black text-[11px] shadow-sm">Acierto</span>
             <span class="text-slate-500 text-xs">Verde</span>
-            <span class="px-2 py-0.5 rounded bg-red-500 text-black font-bold text-[11px] shadow-sm ml-2">Fallo</span>
+            <span class="px-2 py-0.5 rounded bg-red-500 text-white font-black text-[11px] shadow-sm ml-2">Fallo</span>
             <span class="text-slate-500 text-xs">Rojo</span>
           </div>
         </div>
@@ -536,6 +549,7 @@
       }
     }
 
+    // Regla de cierre: Se bloquea 2 días después de la fecha del partido (48 horas después)
     function isGamePassed(dateStr) {
       const match = dateStr.match(/\d+/);
       if (!match) return false;
@@ -548,7 +562,9 @@
 
       if (currentYear > 2026 || (currentYear === 2026 && currentMonth > 8)) return true;
       if (currentYear < 2026 || currentMonth < 8) return false;
-      return day < currentDay;
+      
+      // Permite captura el día del juego y al día siguiente; se bloquea a partir del 2do día posterior
+      return currentDay > (day + 1);
     }
 
     function initData() {
@@ -593,7 +609,7 @@
 
       const toast = document.getElementById('toast-message');
       if (toast) {
-        toast.textContent = ok ? '¡Sincronizado con todos los participantes!' : 'Guardado local (Falta configurar Firebase)';
+        toast.textContent = ok ? '¡Sincronizado con todos los participantes!' : 'Guardado local';
         toast.className = 'absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
         setTimeout(() => {
           toast.className = 'hidden absolute right-0 -top-12';
@@ -767,7 +783,7 @@
         const tmPred = appState.predictions['tm']?.[game.id] || {};
 
         const disabledAttr = gamePassed ? 'disabled' : '';
-        const disabledClass = gamePassed ? 'bg-slate-100 text-black cursor-not-allowed opacity-80' : 'bg-white text-black';
+        const disabledClass = gamePassed ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-white';
 
         html += `
           <div class="bg-white rounded-3xl border border-slate-200/90 shadow-apple overflow-hidden hover:shadow-apple-hover transition-all duration-300">
@@ -780,7 +796,7 @@
                 <span class="text-xs font-bold text-slate-300">Juego #${index + 1}</span>
                 ${gamePassed ? `
                   <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/30 uppercase tracking-wider">
-                    Bloqueado (Día Finalizado)
+                    Bloqueado (Finalizado)
                   </span>
                 ` : ''}
               </div>
@@ -861,29 +877,29 @@
 
                     <td class="p-2 bg-charcoal/5 border-r border-slate-300">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-off-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorR || ''}" oninput="updateOfficialScore('${game.id}', 'visitorR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
-                        <input id="cell-${game.id}-off-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorH || ''}" oninput="updateOfficialScore('${game.id}', 'visitorH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorR || ''}" oninput="updateOfficialScore('${game.id}', 'visitorR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorH || ''}" oninput="updateOfficialScore('${game.id}', 'visitorH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
                       </div>
                     </td>
 
                     <td class="p-2 bg-sky-50/40 border-r border-sky-200">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-gori-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'gori', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
-                        <input id="cell-${game.id}-gori-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'gori', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input id="cell-${game.id}-gori-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'gori', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input id="cell-${game.id}-gori-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'gori', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
                       </div>
                     </td>
 
                     <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-mm-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                        <input id="cell-${game.id}-mm-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
                       </div>
                     </td>
 
                     <td class="p-2 bg-orange-50/40">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-tm-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        <input id="cell-${game.id}-tm-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
                       </div>
                     </td>
                   </tr>
@@ -904,29 +920,29 @@
 
                     <td class="p-2 bg-charcoal/5 border-r border-slate-300">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-off-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localR || ''}" oninput="updateOfficialScore('${game.id}', 'localR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
-                        <input id="cell-${game.id}-off-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localH || ''}" oninput="updateOfficialScore('${game.id}', 'localH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs text-black ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localR || ''}" oninput="updateOfficialScore('${game.id}', 'localR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localH || ''}" oninput="updateOfficialScore('${game.id}', 'localH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
                       </div>
                     </td>
 
                     <td class="p-2 bg-sky-50/40 border-r border-sky-200">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-gori-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localR || ''}" oninput="updatePrediction('${game.id}', 'gori', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
-                        <input id="cell-${game.id}-gori-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localH || ''}" oninput="updatePrediction('${game.id}', 'gori', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input id="cell-${game.id}-gori-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localR || ''}" oninput="updatePrediction('${game.id}', 'gori', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+                        <input id="cell-${game.id}-gori-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localH || ''}" oninput="updatePrediction('${game.id}', 'gori', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
                       </div>
                     </td>
 
                     <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-mm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                        <input id="cell-${game.id}-mm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                        <input id="cell-${game.id}-mm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
                       </div>
                     </td>
 
                     <td class="p-2 bg-orange-50/40">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-tm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        <input id="cell-${game.id}-tm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs text-black ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
+                        <input id="cell-${game.id}-tm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
                       </div>
                     </td>
                   </tr>
@@ -945,23 +961,23 @@
                     </td>
 
                     <td class="p-2 bg-sky-100/60 border-r border-sky-200">
-                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
-                        <div id="cell-${game.id}-gori-totR" class="score-cell rounded py-0.5 text-black">-</div>
-                        <div id="cell-${game.id}-gori-totH" class="score-cell rounded py-0.5 text-black">-</div>
+                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs">
+                        <div id="cell-${game.id}-gori-totR" class="score-cell rounded py-0.5">-</div>
+                        <div id="cell-${game.id}-gori-totH" class="score-cell rounded py-0.5">-</div>
                       </div>
                     </td>
 
                     <td class="p-2 bg-emerald-100/60 border-r border-emerald-200">
-                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
-                        <div id="cell-${game.id}-mm-totR" class="score-cell rounded py-0.5 text-black">-</div>
-                        <div id="cell-${game.id}-mm-totH" class="score-cell rounded py-0.5 text-black">-</div>
+                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs">
+                        <div id="cell-${game.id}-mm-totR" class="score-cell rounded py-0.5">-</div>
+                        <div id="cell-${game.id}-mm-totH" class="score-cell rounded py-0.5">-</div>
                       </div>
                     </td>
 
                     <td class="p-2 bg-orange-100/60">
-                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
-                        <div id="cell-${game.id}-tm-totR" class="score-cell rounded py-0.5 text-black">-</div>
-                        <div id="cell-${game.id}-tm-totH" class="score-cell rounded py-0.5 text-black">-</div>
+                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs">
+                        <div id="cell-${game.id}-tm-totR" class="score-cell rounded py-0.5">-</div>
+                        <div id="cell-${game.id}-tm-totH" class="score-cell rounded py-0.5">-</div>
                       </div>
                     </td>
                   </tr>
@@ -1041,17 +1057,15 @@
             const el = document.getElementById(`cell-${game.id}-${p.id}-${f.id}`);
             if (!el) return;
 
-            el.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black', 'border-emerald-600', 'border-red-600', 'bg-emerald-400');
+            el.classList.remove('cell-hit', 'cell-miss');
 
             if (f.validTarget && !isNaN(f.val)) {
               if (f.val === f.target) {
-                el.classList.add('bg-emerald-500', 'text-white', 'font-black', 'border-emerald-600');
+                el.classList.add('cell-hit');
                 gamePoints++;
               } else {
-                el.classList.add('bg-red-500', 'text-white', 'font-black', 'border-red-600');
+                el.classList.add('cell-miss');
               }
-            } else {
-              el.classList.add('text-black');
             }
           });
 
@@ -1061,32 +1075,28 @@
           const totREl = document.getElementById(`cell-${game.id}-${p.id}-totR`);
           if (totREl) {
             totREl.textContent = pTotR !== null ? pTotR : '-';
-            totREl.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black');
+            totREl.classList.remove('cell-hit', 'cell-miss');
             if (offTotR !== null && pTotR !== null) {
               if (pTotR === offTotR) {
-                totREl.classList.add('bg-emerald-500', 'text-white', 'font-black');
+                totREl.classList.add('cell-hit');
                 gamePoints++;
               } else {
-                totREl.classList.add('bg-red-500', 'text-white', 'font-black');
+                totREl.classList.add('cell-miss');
               }
-            } else {
-              totREl.classList.add('text-black');
             }
           }
 
           const totHEl = document.getElementById(`cell-${game.id}-${p.id}-totH`);
           if (totHEl) {
             totHEl.textContent = pTotH !== null ? pTotH : '-';
-            totHEl.classList.remove('bg-emerald-500', 'bg-red-500', 'text-white', 'text-black');
+            totHEl.classList.remove('cell-hit', 'cell-miss');
             if (offTotH !== null && pTotH !== null) {
               if (pTotH === offTotH) {
-                totHEl.classList.add('bg-emerald-500', 'text-white', 'font-black');
+                totHEl.classList.add('cell-hit');
                 gamePoints++;
               } else {
-                totHEl.classList.add('bg-red-500', 'text-white', 'font-black');
+                totHEl.classList.add('cell-miss');
               }
-            } else {
-              totHEl.classList.add('text-black');
             }
           }
 
