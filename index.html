@@ -531,8 +531,38 @@
 
     function applyIncomingState(data) {
       if (!data) return;
-      if (data.official) appState.official = data.official;
-      if (data.predictions) appState.predictions = data.predictions;
+      
+      // Fusión profunda y segura para datos oficiales (permite actualizaciones parciales por ID o campo)
+      if (data.official && typeof data.official === 'object') {
+        if (!appState.official) appState.official = {};
+        Object.keys(data.official).forEach(gameId => {
+          if (data.official[gameId] && typeof data.official[gameId] === 'object') {
+            appState.official[gameId] = {
+              ...(appState.official[gameId] || {}),
+              ...data.official[gameId]
+            };
+          }
+        });
+      }
+
+      // Fusión profunda y segura para pronósticos de participantes
+      if (data.predictions && typeof data.predictions === 'object') {
+        if (!appState.predictions) appState.predictions = {};
+        Object.keys(data.predictions).forEach(pId => {
+          if (!appState.predictions[pId]) appState.predictions[pId] = {};
+          if (data.predictions[pId] && typeof data.predictions[pId] === 'object') {
+            Object.keys(data.predictions[pId]).forEach(gameId => {
+              if (data.predictions[pId][gameId] && typeof data.predictions[pId][gameId] === 'object') {
+                appState.predictions[pId][gameId] = {
+                  ...(appState.predictions[pId][gameId] || {}),
+                  ...data.predictions[pId][gameId]
+                };
+              }
+            });
+          }
+        });
+      }
+
       appState.lastUpdated = data.lastUpdated || Date.now();
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
