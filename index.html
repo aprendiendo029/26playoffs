@@ -267,16 +267,6 @@
             Gran Batalla de Playoffs
           </h2>
         </div>
-
-        <!-- Save Button & Toast -->
-        <div class="flex items-center space-x-2 shrink-0 relative">
-          <button onclick="manualSaveData()" class="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white/20 hover:bg-white/30 text-white border border-white/30 shadow-md backdrop-blur-md transition-all active:scale-95 flex items-center space-x-2">
-            <span id="save-btn-text">Guardar</span>
-          </button>
-          <div id="toast-message" class="hidden absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300">
-            ¡Pronósticos y bitácora guardados con éxito!
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -435,6 +425,7 @@
     let appState = {
       official: {},    
       predictions: {}, 
+      savedPredictions: {},
       selectedDateFilter: 'TODOS',
       selectedZoneFilter: 'TODOS',
       lastUpdated: 0,
@@ -563,11 +554,24 @@
         });
       }
 
+      // Fusión para estado de guardado/blind pick
+      if (data.savedPredictions && typeof data.savedPredictions === 'object') {
+        if (!appState.savedPredictions) appState.savedPredictions = {};
+        Object.keys(data.savedPredictions).forEach(gameId => {
+          if (data.savedPredictions[gameId] && typeof data.savedPredictions[gameId] === 'object') {
+            appState.savedPredictions[gameId] = {
+              ...(appState.savedPredictions[gameId] || {}),
+              ...data.savedPredictions[gameId]
+            };
+          }
+        });
+      }
+
       appState.lastUpdated = data.lastUpdated || Date.now();
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      updateInputsDOM();
       renderLeaderboard();
+      renderGames();
       updateScoreboardValidations();
     }
 
@@ -579,12 +583,20 @@
         syncInput(`cell-${game.id}-off-locR`, off.localR);
         syncInput(`cell-${game.id}-off-locH`, off.localH);
 
+        const isRevealed = areAllPredictionsRevealed(game.id);
+        const isClosed = isGameOfficialClosed(game.id);
+
         PARTICIPANTS.forEach(p => {
-          const pred = appState.predictions[p.id]?.[game.id] || {};
-          syncInput(`cell-${game.id}-${p.id}-visR`, pred.visitorR);
-          syncInput(`cell-${game.id}-${p.id}-visH`, pred.visitorH);
-          syncInput(`cell-${game.id}-${p.id}-locR`, pred.localR);
-          syncInput(`cell-${game.id}-${p.id}-locH`, pred.localH);
+          const isSaved = isParticipantCompleted(game.id, p.id);
+          const isHidden = !isRevealed && !isClosed && isSaved;
+
+          if (!isHidden) {
+            const pred = appState.predictions[p.id]?.[game.id] || {};
+            syncInput(`cell-${game.id}-${p.id}-visR`, pred.visitorR);
+            syncInput(`cell-${game.id}-${p.id}-visH`, pred.visitorH);
+            syncInput(`cell-${game.id}-${p.id}-locR`, pred.localR);
+            syncInput(`cell-${game.id}-${p.id}-locH`, pred.localH);
+          }
         });
       });
     }
@@ -614,7 +626,8 @@
                 const prev = currentSnap.data();
                 valoresAnteriores = {
                   official: prev.official || {},
-                  predictions: prev.predictions || {}
+                  predictions: prev.predictions || {},
+                  savedPredictions: prev.savedPredictions || {}
                 };
               }
             } catch (readErr) {
@@ -624,13 +637,15 @@
 
           const valoresNuevos = {
             official: JSON.parse(JSON.stringify(appState.official)),
-            predictions: JSON.parse(JSON.stringify(appState.predictions))
+            predictions: JSON.parse(JSON.stringify(appState.predictions)),
+            savedPredictions: JSON.parse(JSON.stringify(appState.savedPredictions || {}))
           };
 
           // 1. Actualización principal de la quiniela
           await setDoc(docRef, {
             official: appState.official,
             predictions: appState.predictions,
+            savedPredictions: appState.savedPredictions || {},
             lastUpdated: appState.lastUpdated,
             senderId: DEVICE_ID
           });
@@ -689,21 +704,131 @@
       }
     }
 
-    // Regla de cierre: Se bloquea 2 días después de la fecha del partido (48 horas después)
-    function isGamePassed(dateStr) {
-      const match = dateStr.match(/\d+/);
-      if (!match) return false;
-      const day = parseInt(match[0], 10);
-      
-      const today = new Date();
-      const currentDay = today.getDate();
-      const currentMonth = today.getMonth() + 1;
-      const currentYear = today.getFullYear();
+    // --- Sistema de Notificaciones Flotantes (Toasts) ---
+    function showToast(message, type = 'success') {
+      let container = document.getElementById('global-toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'global-toast-container';
+        container.className = 'fixed top-5 right-5 z-[9999] pointer-events-none flex flex-col gap-2 max-w-md w-full px-4';
+        document.body.appendChild(container);
+      }
 
-      if (currentYear > 2026 || (currentYear === 2026 && currentMonth > 8)) return true;
-      if (currentYear < 2026 || currentMonth < 8) return false;
+      const toastEl = document.createElement('div');
+      let bgClass = 'bg-emerald-600 border-emerald-400/40 text-white';
+      let icon = '✓';
+      if (type === 'error') {
+        bgClass = 'bg-rose-600 border-rose-400/40 text-white';
+        icon = '⚠️';
+      } else if (type === 'info') {
+        bgClass = 'bg-slate-800 border-slate-700 text-white';
+        icon = '🔒';
+      }
+
+      toastEl.className = `pointer-events-auto transform transition-all duration-300 ease-out translate-y-0 opacity-100 flex items-center space-x-3 p-3.5 rounded-2xl shadow-apple-hover border text-xs sm:text-sm font-semibold ${bgClass}`;
+      toastEl.innerHTML = `
+        <span class="text-base shrink-0">${icon}</span>
+        <span class="flex-1 leading-snug">${message}</span>
+      `;
+
+      container.appendChild(toastEl);
+
+      setTimeout(() => {
+        toastEl.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => {
+          if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
+        }, 300);
+      }, 4000);
+    }
+
+    // Regla de cierre: Se bloquea definitivamente de forma automática cuando el juego tiene resultados oficiales registrados
+    function isGameOfficialClosed(gameId) {
+      const off = appState.official[gameId];
+      if (!off) return false;
+      if (off.status === 'FINAL' || off.final === true) return true;
       
-      return currentDay > (day + 1);
+      const vR = parseInt(off.visitorR, 10);
+      const vH = parseInt(off.visitorH, 10);
+      const lR = parseInt(off.localR, 10);
+      const lH = parseInt(off.localH, 10);
+      
+      return !isNaN(vR) && !isNaN(vH) && !isNaN(lR) && !isNaN(lH) && 
+             off.visitorR !== '' && off.visitorH !== '' && off.localR !== '' && off.localH !== '';
+    }
+
+    function isGamePassed(dateOrGameId) {
+      if (!dateOrGameId) return false;
+      if (typeof dateOrGameId === 'string' && dateOrGameId.startsWith('g')) {
+        return isGameOfficialClosed(dateOrGameId);
+      }
+      
+      const gamesOnDate = SCHEDULE.filter(g => g.date === dateOrGameId);
+      if (gamesOnDate.length > 0) {
+        return gamesOnDate.every(g => isGameOfficialClosed(g.id));
+      }
+      return false;
+    }
+
+    // --- Lógica de Pronóstico Completo y Revelación Ciega ("Blind Pick") ---
+    function isParticipantCompleted(gameId, participantId) {
+      const pred = appState.predictions[participantId]?.[gameId];
+      if (!pred) return false;
+      
+      const vR = parseInt(pred.visitorR, 10);
+      const vH = parseInt(pred.visitorH, 10);
+      const lR = parseInt(pred.localR, 10);
+      const lH = parseInt(pred.localH, 10);
+
+      const hasAllFields = !isNaN(vR) && !isNaN(vH) && !isNaN(lR) && !isNaN(lH) &&
+                           pred.visitorR !== '' && pred.visitorH !== '' && pred.localR !== '' && pred.localH !== '';
+
+      const isMarkedSaved = appState.savedPredictions?.[gameId]?.[participantId] === true;
+      return isMarkedSaved && hasAllFields;
+    }
+
+    function areAllPredictionsRevealed(gameId) {
+      if (isGameOfficialClosed(gameId)) return true;
+      // Revelado público si los 3 participantes (Gori, MM, TM) han completado y guardado su pronóstico
+      return PARTICIPANTS.every(p => isParticipantCompleted(gameId, p.id));
+    }
+
+    // Guardado individual por participante y partido con validaciones estrictas
+    async function saveParticipantGame(gameId, participantId) {
+      if (isGameOfficialClosed(gameId)) {
+        showToast("Este partido ya está finalizado y bloqueado oficialmente.", "info");
+        return;
+      }
+
+      const pred = appState.predictions[participantId]?.[gameId] || {};
+      const vR = parseInt(pred.visitorR, 10);
+      const vH = parseInt(pred.visitorH, 10);
+      const lR = parseInt(pred.localR, 10);
+      const lH = parseInt(pred.localH, 10);
+
+      const isValid = !isNaN(vR) && !isNaN(vH) && !isNaN(lR) && !isNaN(lH) &&
+                      pred.visitorR !== '' && pred.visitorH !== '' && pred.localR !== '' && pred.localH !== '';
+
+      if (!isValid) {
+        showToast("Completa todos los pronósticos de tu partido antes de guardar", "error");
+        return;
+      }
+
+      if (!appState.savedPredictions) appState.savedPredictions = {};
+      if (!appState.savedPredictions[gameId]) appState.savedPredictions[gameId] = {};
+      appState.savedPredictions[gameId][participantId] = true;
+
+      const completedCount = PARTICIPANTS.filter(p => isParticipantCompleted(gameId, p.id)).length;
+
+      await sendStateToFirebase(true);
+
+      if (completedCount < 3) {
+        showToast("Pronóstico guardado, visible al momento en que todos los participantes completen sus pronósticos", "info");
+      } else {
+        showToast("¡Pronósticos completados por los 3 participantes! Todos los pronósticos han sido revelados.", "success");
+      }
+
+      renderGames();
+      renderLeaderboard();
     }
 
     function initData() {
@@ -714,6 +839,7 @@
           appState = JSON.parse(saved);
           if (!appState.selectedZoneFilter) appState.selectedZoneFilter = 'TODOS';
           if (!appState.selectedDateFilter) appState.selectedDateFilter = 'TODOS';
+          if (!appState.savedPredictions) appState.savedPredictions = {};
           appState.senderId = DEVICE_ID;
         } catch (e) {
           initEmptyData();
@@ -726,6 +852,7 @@
     function initEmptyData() {
       appState.official = {};
       appState.predictions = { gori: {}, mm: {}, tm: {} };
+      appState.savedPredictions = {};
       appState.selectedDateFilter = 'TODOS';
       appState.selectedZoneFilter = 'TODOS';
       appState.lastUpdated = Date.now();
@@ -733,6 +860,7 @@
       
       SCHEDULE.forEach(game => {
         appState.official[game.id] = { visitorR: '', visitorH: '', localR: '', localH: '' };
+        appState.savedPredictions[game.id] = { gori: false, mm: false, tm: false };
         PARTICIPANTS.forEach(p => {
           if (!appState.predictions[p.id]) appState.predictions[p.id] = {};
           appState.predictions[p.id][game.id] = { visitorR: '', visitorH: '', localR: '', localH: '' };
@@ -740,29 +868,58 @@
       });
     }
 
-    // --- Guardado Manual con Double-Write a Bitácora ---
+    // --- Guardado Manual Global con Double-Write y Validación ---
     async function manualSaveData() {
       const saveBtn = document.getElementById('save-btn-text');
       if (saveBtn) saveBtn.textContent = 'Guardando...';
 
+      let hasIncomplete = false;
+      let hasAnySaved = false;
+
+      SCHEDULE.forEach(game => {
+        if (!isGameOfficialClosed(game.id)) {
+          PARTICIPANTS.forEach(p => {
+            const pred = appState.predictions[p.id]?.[game.id];
+            if (pred) {
+              const vals = [pred.visitorR, pred.visitorH, pred.localR, pred.localH];
+              const filled = vals.filter(v => v !== '' && v !== undefined && v !== null);
+              if (filled.length > 0 && filled.length < 4) {
+                hasIncomplete = true;
+              } else if (filled.length === 4) {
+                if (!appState.savedPredictions) appState.savedPredictions = {};
+                if (!appState.savedPredictions[game.id]) appState.savedPredictions[game.id] = {};
+                appState.savedPredictions[game.id][p.id] = true;
+                hasAnySaved = true;
+              }
+            }
+          });
+        }
+      });
+
+      if (hasIncomplete) {
+        if (saveBtn) saveBtn.textContent = 'Guardar';
+        showToast("Completa todos los pronósticos de tu partido antes de guardar", "error");
+        return;
+      }
+
       const ok = await sendStateToFirebase(true);
       if (saveBtn) saveBtn.textContent = 'Guardar';
 
-      const toast = document.getElementById('toast-message');
-      if (toast) {
-        toast.textContent = ok 
-          ? '¡Pronósticos y bitácora guardados con éxito!' 
-          : 'Guardado en memoria local';
-        toast.className = 'absolute right-0 -top-12 bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl shadow-lg border border-emerald-400/40 whitespace-nowrap transition-all duration-300 opacity-100 block';
-        setTimeout(() => {
-          toast.className = 'hidden absolute right-0 -top-12';
-        }, 3000);
+      if (ok) {
+        showToast("¡Pronósticos y bitácora guardados con éxito!", "success");
+      } else {
+        showToast("Guardado en memoria local", "info");
       }
+
+      renderGames();
+      renderLeaderboard();
     }
 
     function calculateParticipantScores() {
       const scores = { gori: 0, mm: 0, tm: 0 };
       SCHEDULE.forEach(game => {
+        if (!isGameOfficialClosed(game.id)) return;
+
         const off = appState.official[game.id];
         if (!off) return;
 
@@ -913,7 +1070,8 @@
       filteredGames.forEach((game, index) => {
         const visTeam = TEAMS[game.visitor];
         const locTeam = TEAMS[game.local];
-        const gamePassed = isGamePassed(game.date);
+        const isClosed = isGameOfficialClosed(game.id);
+        const isRevealed = areAllPredictionsRevealed(game.id);
         
         const gameZone = (visTeam.zone === locTeam.zone) ? `Zona ${visTeam.zone}` : `Interzona (${visTeam.zone} vs ${locTeam.zone})`;
         const zoneBadgeClass = visTeam.zone === 'Norte' && locTeam.zone === 'Norte' 
@@ -921,27 +1079,44 @@
           : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
 
         const off = appState.official[game.id] || { visitorR: '', visitorH: '', localR: '', localH: '' };
-        const goriPred = appState.predictions['gori']?.[game.id] || {};
-        const mmPred = appState.predictions['mm']?.[game.id] || {};
-        const tmPred = appState.predictions['tm']?.[game.id] || {};
 
-        const disabledAttr = gamePassed ? 'disabled' : '';
-        const disabledClass = gamePassed ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-white';
+        // Badge de estado en el header del juego
+        let gameStatusBadge = '';
+        if (isClosed) {
+          gameStatusBadge = `
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+              Bloqueado (Finalizado Oficial)
+            </span>
+          `;
+        } else if (isRevealed) {
+          gameStatusBadge = `
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 uppercase tracking-wider">
+              Pronósticos Revelados (3/3)
+            </span>
+          `;
+        } else {
+          const countSaved = PARTICIPANTS.filter(p => isParticipantCompleted(game.id, p.id)).length;
+          gameStatusBadge = `
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30 uppercase tracking-wider">
+              Pronósticos Ciegos (${countSaved}/3 Guardados)
+            </span>
+          `;
+        }
+
+        const disabledOfficialAttr = isClosed ? 'disabled' : '';
+        const disabledOfficialClass = isClosed ? 'bg-slate-100 cursor-not-allowed opacity-90' : 'bg-white';
 
         html += `
           <div class="bg-white rounded-3xl border border-slate-200/90 shadow-apple overflow-hidden hover:shadow-apple-hover transition-all duration-300">
             
+            <!-- Game Card Header -->
             <div class="bg-gradient-to-r from-charcoal via-charcoal-dark to-charcoal text-white px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-charcoal-light/40">
-              <div class="flex items-center space-x-3">
+              <div class="flex items-center space-x-3 flex-wrap gap-y-2">
                 <div class="flex items-center space-x-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-xl border border-white/20">
                   <span class="text-xs sm:text-sm font-extrabold text-amber-300 tracking-wide">${game.date}</span>
                 </div>
                 <span class="text-xs font-bold text-slate-300">Juego #${index + 1}</span>
-                ${gamePassed ? `
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/30 uppercase tracking-wider">
-                    Bloqueado (Finalizado)
-                  </span>
-                ` : ''}
+                ${gameStatusBadge}
               </div>
 
               <div class="flex items-center space-x-2">
@@ -952,7 +1127,7 @@
             </div>
 
             <div class="p-4 sm:p-6 overflow-x-auto">
-              <table class="w-full text-center border-collapse min-w-[700px]">
+              <table class="w-full text-center border-collapse min-w-[720px]">
                 <thead>
                   <tr class="text-xs font-bold border-b border-slate-200">
                     <th class="p-3 text-left w-52 bg-slate-50 rounded-tl-2xl border-r border-slate-200">
@@ -963,26 +1138,38 @@
                       <span class="font-extrabold uppercase tracking-wider">Oficial</span>
                     </th>
 
-                    <th class="p-3 bg-sky-50 text-sky-900 border-r border-sky-200 w-36">
-                      <div class="flex items-center justify-between px-1">
-                        <span class="font-extrabold">Gori</span>
-                        <span id="points-badge-gori-${game.id}" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-200 text-sky-800">0 pts</span>
-                      </div>
-                    </th>
+                    ${PARTICIPANTS.map(p => {
+                      const isSaved = isParticipantCompleted(game.id, p.id);
+                      const isHidden = !isRevealed && !isClosed && isSaved;
+                      
+                      let pBg = 'bg-sky-50 text-sky-900 border-sky-200';
+                      if (p.id === 'mm') pBg = 'bg-emerald-50 text-emerald-900 border-emerald-200';
+                      if (p.id === 'tm') pBg = 'bg-orange-50 text-orange-900 border-orange-200';
 
-                    <th class="p-3 bg-emerald-50 text-emerald-900 border-r border-emerald-200 w-36">
-                      <div class="flex items-center justify-between px-1">
-                        <span class="font-extrabold">MM</span>
-                        <span id="points-badge-mm-${game.id}" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-200 text-emerald-800">0 pts</span>
-                      </div>
-                    </th>
+                      let badgeHtml = '';
+                      if (isClosed) {
+                        badgeHtml = `<span id="points-badge-${p.id}-${game.id}" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">0 pts</span>`;
+                      } else if (isHidden) {
+                        badgeHtml = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200/80 text-amber-900 border border-amber-300/80 flex items-center gap-1 shadow-sm">🔒 Oculto</span>`;
+                      } else if (isRevealed) {
+                        badgeHtml = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-200/80 text-emerald-900 border border-emerald-300/80 flex items-center gap-1 shadow-sm">✓ Revelado</span>`;
+                      } else {
+                        badgeHtml = `
+                          <button type="button" onclick="saveParticipantGame('${game.id}', '${p.id}')" class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-charcoal hover:bg-charcoal-dark text-white shadow-sm transition active:scale-95 flex items-center gap-1">
+                            <span>💾</span> <span>Guardar</span>
+                          </button>
+                        `;
+                      }
 
-                    <th class="p-3 bg-orange-50 text-orange-900 rounded-tr-2xl w-36">
-                      <div class="flex items-center justify-between px-1">
-                        <span class="font-extrabold">TM</span>
-                        <span id="points-badge-tm-${game.id}" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-200 text-orange-800">0 pts</span>
-                      </div>
-                    </th>
+                      return `
+                        <th class="p-2.5 ${pBg} border-r border-slate-200 w-36 ${p.id === 'tm' ? 'rounded-tr-2xl' : ''}">
+                          <div class="flex items-center justify-between px-1">
+                            <span class="font-extrabold text-xs sm:text-sm">${p.name}</span>
+                            ${badgeHtml}
+                          </div>
+                        </th>
+                      `;
+                    }).join('')}
                   </tr>
 
                   <tr class="text-[10px] font-black uppercase text-slate-500 bg-slate-100 border-b border-slate-200">
@@ -1018,33 +1205,48 @@
                       </div>
                     </td>
 
+                    <!-- OFICIAL VISITANTE -->
                     <td class="p-2 bg-charcoal/5 border-r border-slate-300">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-off-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorR || ''}" oninput="updateOfficialScore('${game.id}', 'visitorR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
-                        <input id="cell-${game.id}-off-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.visitorH || ''}" oninput="updateOfficialScore('${game.id}', 'visitorH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-visR" type="number" min="0" max="99" ${disabledOfficialAttr} placeholder="0" value="${off.visitorR || ''}" oninput="updateOfficialScore('${game.id}', 'visitorR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledOfficialClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-visH" type="number" min="0" max="99" ${disabledOfficialAttr} placeholder="0" value="${off.visitorH || ''}" oninput="updateOfficialScore('${game.id}', 'visitorH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledOfficialClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
                       </div>
                     </td>
 
-                    <td class="p-2 bg-sky-50/40 border-r border-sky-200">
-                      <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-gori-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'gori', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
-                        <input id="cell-${game.id}-gori-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'gori', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
-                      </div>
-                    </td>
+                    <!-- PARTICIPANTES VISITANTE -->
+                    ${PARTICIPANTS.map(p => {
+                      const pred = appState.predictions[p.id]?.[game.id] || {};
+                      const isSaved = isParticipantCompleted(game.id, p.id);
+                      const isHidden = !isRevealed && !isClosed && isSaved;
+                      const isParticipantDisabled = isClosed || isRevealed;
+                      const disabledAttr = isParticipantDisabled ? 'disabled' : '';
+                      const disabledClass = isParticipantDisabled ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-white';
 
-                    <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
-                      <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-mm-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                        <input id="cell-${game.id}-mm-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                      </div>
-                    </td>
+                      let bgCol = 'bg-sky-50/40 border-sky-200';
+                      if (p.id === 'mm') bgCol = 'bg-emerald-50/40 border-emerald-200';
+                      if (p.id === 'tm') bgCol = 'bg-orange-50/40';
 
-                    <td class="p-2 bg-orange-50/40">
-                      <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-tm-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        <input id="cell-${game.id}-tm-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.visitorH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                      </div>
-                    </td>
+                      if (isHidden) {
+                        return `
+                          <td class="p-2 ${bgCol} border-r border-slate-200">
+                            <div class="grid grid-cols-2 gap-1.5">
+                              <div class="w-full text-center py-1 rounded border border-slate-300/80 font-mono font-black text-xs bg-slate-100 text-slate-400 select-none" title="Pronóstico guardado (Oculto)">••••</div>
+                              <div class="w-full text-center py-1 rounded border border-slate-300/80 font-mono font-black text-xs bg-slate-100 text-slate-400 select-none" title="Pronóstico guardado (Oculto)">••••</div>
+                            </div>
+                          </td>
+                        `;
+                      }
+
+                      return `
+                        <td class="p-2 ${bgCol} border-r border-slate-200">
+                          <div class="grid grid-cols-2 gap-1.5">
+                            <input id="cell-${game.id}-${p.id}-visR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${pred.visitorR || ''}" oninput="updatePrediction('${game.id}', '${p.id}', 'visitorR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                            <input id="cell-${game.id}-${p.id}-visH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${pred.visitorH || ''}" oninput="updatePrediction('${game.id}', '${p.id}', 'visitorH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                          </div>
+                        </td>
+                      `;
+                    }).join('')}
+
                   </tr>
 
                   <!-- FILA LOCAL -->
@@ -1061,33 +1263,48 @@
                       </div>
                     </td>
 
+                    <!-- OFICIAL LOCAL -->
                     <td class="p-2 bg-charcoal/5 border-r border-slate-300">
                       <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-off-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localR || ''}" oninput="updateOfficialScore('${game.id}', 'localR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
-                        <input id="cell-${game.id}-off-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="0" value="${off.localH || ''}" oninput="updateOfficialScore('${game.id}', 'localH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-locR" type="number" min="0" max="99" ${disabledOfficialAttr} placeholder="0" value="${off.localR || ''}" oninput="updateOfficialScore('${game.id}', 'localR', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledOfficialClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
+                        <input id="cell-${game.id}-off-locH" type="number" min="0" max="99" ${disabledOfficialAttr} placeholder="0" value="${off.localH || ''}" oninput="updateOfficialScore('${game.id}', 'localH', this.value)" class="w-full text-center py-1 rounded border border-slate-300 font-black text-xs ${disabledOfficialClass} focus:ring-2 focus:ring-charcoal focus:outline-none" />
                       </div>
                     </td>
 
-                    <td class="p-2 bg-sky-50/40 border-r border-sky-200">
-                      <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-gori-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localR || ''}" oninput="updatePrediction('${game.id}', 'gori', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
-                        <input id="cell-${game.id}-gori-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${goriPred.localH || ''}" oninput="updatePrediction('${game.id}', 'gori', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-sky-500 focus:outline-none" />
-                      </div>
-                    </td>
+                    <!-- PARTICIPANTES LOCAL -->
+                    ${PARTICIPANTS.map(p => {
+                      const pred = appState.predictions[p.id]?.[game.id] || {};
+                      const isSaved = isParticipantCompleted(game.id, p.id);
+                      const isHidden = !isRevealed && !isClosed && isSaved;
+                      const isParticipantDisabled = isClosed || isRevealed;
+                      const disabledAttr = isParticipantDisabled ? 'disabled' : '';
+                      const disabledClass = isParticipantDisabled ? 'bg-slate-100 cursor-not-allowed opacity-80' : 'bg-white';
 
-                    <td class="p-2 bg-emerald-50/40 border-r border-emerald-200">
-                      <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-mm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                        <input id="cell-${game.id}-mm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${mmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'mm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
-                      </div>
-                    </td>
+                      let bgCol = 'bg-sky-50/40 border-sky-200';
+                      if (p.id === 'mm') bgCol = 'bg-emerald-50/40 border-emerald-200';
+                      if (p.id === 'tm') bgCol = 'bg-orange-50/40';
 
-                    <td class="p-2 bg-orange-50/40">
-                      <div class="grid grid-cols-2 gap-1.5">
-                        <input id="cell-${game.id}-tm-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localR || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                        <input id="cell-${game.id}-tm-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${tmPred.localH || ''}" oninput="updatePrediction('${game.id}', 'tm', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-orange-500 focus:outline-none" />
-                      </div>
-                    </td>
+                      if (isHidden) {
+                        return `
+                          <td class="p-2 ${bgCol} border-r border-slate-200">
+                            <div class="grid grid-cols-2 gap-1.5">
+                              <div class="w-full text-center py-1 rounded border border-slate-300/80 font-mono font-black text-xs bg-slate-100 text-slate-400 select-none" title="Pronóstico guardado (Oculto)">••••</div>
+                              <div class="w-full text-center py-1 rounded border border-slate-300/80 font-mono font-black text-xs bg-slate-100 text-slate-400 select-none" title="Pronóstico guardado (Oculto)">••••</div>
+                            </div>
+                          </td>
+                        `;
+                      }
+
+                      return `
+                        <td class="p-2 ${bgCol} border-r border-slate-200">
+                          <div class="grid grid-cols-2 gap-1.5">
+                            <input id="cell-${game.id}-${p.id}-locR" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${pred.localR || ''}" oninput="updatePrediction('${game.id}', '${p.id}', 'localR', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                            <input id="cell-${game.id}-${p.id}-locH" type="number" min="0" max="99" ${disabledAttr} placeholder="-" value="${pred.localH || ''}" oninput="updatePrediction('${game.id}', '${p.id}', 'localH', this.value)" class="score-cell w-full text-center py-1 rounded border border-slate-300 font-bold text-xs ${disabledClass} focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                          </div>
+                        </td>
+                      `;
+                    }).join('')}
+
                   </tr>
 
                   <!-- FILA TOTALES -->
@@ -1103,26 +1320,35 @@
                       </div>
                     </td>
 
-                    <td class="p-2 bg-sky-100/60 border-r border-sky-200">
-                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs">
-                        <div id="cell-${game.id}-gori-totR" class="score-cell rounded py-0.5">-</div>
-                        <div id="cell-${game.id}-gori-totH" class="score-cell rounded py-0.5">-</div>
-                      </div>
-                    </td>
+                    ${PARTICIPANTS.map(p => {
+                      const isSaved = isParticipantCompleted(game.id, p.id);
+                      const isHidden = !isRevealed && !isClosed && isSaved;
 
-                    <td class="p-2 bg-emerald-100/60 border-r border-emerald-200">
-                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs">
-                        <div id="cell-${game.id}-mm-totR" class="score-cell rounded py-0.5">-</div>
-                        <div id="cell-${game.id}-mm-totH" class="score-cell rounded py-0.5">-</div>
-                      </div>
-                    </td>
+                      let bgCol = 'bg-sky-100/60 border-sky-200';
+                      if (p.id === 'mm') bgCol = 'bg-emerald-100/60 border-emerald-200';
+                      if (p.id === 'tm') bgCol = 'bg-orange-100/60';
 
-                    <td class="p-2 bg-orange-100/60">
-                      <div class="grid grid-cols-2 gap-1 text-center font-black text-xs">
-                        <div id="cell-${game.id}-tm-totR" class="score-cell rounded py-0.5">-</div>
-                        <div id="cell-${game.id}-tm-totH" class="score-cell rounded py-0.5">-</div>
-                      </div>
-                    </td>
+                      if (isHidden) {
+                        return `
+                          <td class="p-2 ${bgCol} border-r border-slate-200">
+                            <div class="grid grid-cols-2 gap-1 text-center font-mono font-bold text-xs text-slate-400">
+                              <span>••••</span>
+                              <span>••••</span>
+                            </div>
+                          </td>
+                        `;
+                      }
+
+                      return `
+                        <td class="p-2 ${bgCol} border-r border-slate-200">
+                          <div class="grid grid-cols-2 gap-1 text-center font-black text-xs">
+                            <div id="cell-${game.id}-${p.id}-totR" class="score-cell rounded py-0.5">-</div>
+                            <div id="cell-${game.id}-${p.id}-totH" class="score-cell rounded py-0.5">-</div>
+                          </div>
+                        </td>
+                      `;
+                    }).join('')}
+
                   </tr>
 
                 </tbody>
@@ -1148,19 +1374,23 @@
     }
 
     function updatePrediction(gameId, participantId, key, value) {
+      if (isGameOfficialClosed(gameId) || areAllPredictionsRevealed(gameId)) {
+        return;
+      }
       if (!appState.predictions[participantId]) appState.predictions[participantId] = {};
       if (!appState.predictions[participantId][gameId]) {
         appState.predictions[participantId][gameId] = { visitorR: '', visitorH: '', localR: '', localH: '' };
       }
       appState.predictions[participantId][gameId][key] = value;
       updateScoreboardValidations();
-      renderLeaderboard();
       autoSaveDebounced();
     }
 
     function updateScoreboardValidations() {
       SCHEDULE.forEach(game => {
         const off = appState.official[game.id] || {};
+        const isClosed = isGameOfficialClosed(game.id);
+        const isRevealed = areAllPredictionsRevealed(game.id);
 
         const offVisR = parseInt(off.visitorR, 10);
         const offVisH = parseInt(off.visitorH, 10);
@@ -1181,6 +1411,11 @@
         if (offTotHEl) offTotHEl.textContent = offTotH !== null ? offTotH : '-';
 
         PARTICIPANTS.forEach(p => {
+          const isSaved = isParticipantCompleted(game.id, p.id);
+          const isHidden = !isRevealed && !isClosed && isSaved;
+
+          if (isHidden) return; // En modo ciego no se muestran cálculos ni aciertos
+
           const pred = appState.predictions[p.id]?.[game.id] || {};
           let gamePoints = 0;
 
@@ -1244,7 +1479,7 @@
           }
 
           const ptsBadge = document.getElementById(`points-badge-${p.id}-${game.id}`);
-          if (ptsBadge) {
+          if (ptsBadge && isClosed) {
             ptsBadge.textContent = `${gamePoints}/6 pts`;
             if (gamePoints > 0) {
               ptsBadge.className = "text-[10px] font-black px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 shadow-sm";
