@@ -741,6 +741,18 @@
       }, 4000);
     }
 
+    // Helper: Sumatoria segura para Totales
+    function calculateTotalSum(visVal, locVal) {
+      if (visVal === '' || visVal === null || visVal === undefined ||
+          locVal === '' || locVal === null || locVal === undefined) {
+        return null;
+      }
+      const v = parseInt(visVal, 10);
+      const l = parseInt(locVal, 10);
+      if (isNaN(v) || isNaN(l)) return null;
+      return v + l;
+    }
+
     // Regla de cierre: Se bloquea definitivamente de forma automática cuando el juego tiene resultados oficiales registrados
     function isGameOfficialClosed(gameId) {
       const off = appState.official[gameId];
@@ -1315,14 +1327,17 @@
 
                     <td class="p-2 bg-slate-200/80 border-r border-slate-300">
                       <div class="grid grid-cols-2 gap-1 text-center font-black text-xs text-black">
-                        <span id="cell-${game.id}-off-totR">-</span>
-                        <span id="cell-${game.id}-off-totH">-</span>
+                        <span id="cell-${game.id}-off-totR">${calculateTotalSum(off.visitorR, off.localR) !== null ? calculateTotalSum(off.visitorR, off.localR) : '-'}</span>
+                        <span id="cell-${game.id}-off-totH">${calculateTotalSum(off.visitorH, off.localH) !== null ? calculateTotalSum(off.visitorH, off.localH) : '-'}</span>
                       </div>
                     </td>
 
                     ${PARTICIPANTS.map(p => {
                       const isSaved = isParticipantCompleted(game.id, p.id);
                       const isHidden = !isRevealed && !isClosed && isSaved;
+                      const pred = appState.predictions[p.id]?.[game.id] || {};
+                      const pTotR = calculateTotalSum(pred.visitorR, pred.localR);
+                      const pTotH = calculateTotalSum(pred.visitorH, pred.localH);
 
                       let bgCol = 'bg-sky-100/60 border-sky-200';
                       if (p.id === 'mm') bgCol = 'bg-emerald-100/60 border-emerald-200';
@@ -1342,8 +1357,8 @@
                       return `
                         <td class="p-2 ${bgCol} border-r border-slate-200">
                           <div class="grid grid-cols-2 gap-1 text-center font-black text-xs">
-                            <div id="cell-${game.id}-${p.id}-totR" class="score-cell rounded py-0.5">-</div>
-                            <div id="cell-${game.id}-${p.id}-totH" class="score-cell rounded py-0.5">-</div>
+                            <div id="cell-${game.id}-${p.id}-totR" class="score-cell rounded py-0.5">${pTotR !== null ? pTotR : '-'}</div>
+                            <div id="cell-${game.id}-${p.id}-totH" class="score-cell rounded py-0.5">${pTotH !== null ? pTotH : '-'}</div>
                           </div>
                         </td>
                       `;
@@ -1397,13 +1412,13 @@
         const offLocR = parseInt(off.localR, 10);
         const offLocH = parseInt(off.localH, 10);
 
-        const isVisRValid = !isNaN(offVisR);
-        const isVisHValid = !isNaN(offVisH);
-        const isLocRValid = !isNaN(offLocR);
-        const isLocHValid = !isNaN(offLocH);
+        const isVisRValid = !isNaN(offVisR) && off.visitorR !== '' && off.visitorR !== null && off.visitorR !== undefined;
+        const isVisHValid = !isNaN(offVisH) && off.visitorH !== '' && off.visitorH !== null && off.visitorH !== undefined;
+        const isLocRValid = !isNaN(offLocR) && off.localR !== '' && off.localR !== null && off.localR !== undefined;
+        const isLocHValid = !isNaN(offLocH) && off.localH !== '' && off.localH !== null && off.localH !== undefined;
 
-        const offTotR = (isVisRValid && isLocRValid) ? (offVisR + offLocR) : null;
-        const offTotH = (isVisHValid && isLocHValid) ? (offVisH + offLocH) : null;
+        const offTotR = calculateTotalSum(off.visitorR, off.localR);
+        const offTotH = calculateTotalSum(off.visitorH, off.localH);
 
         const offTotREl = document.getElementById(`cell-${game.id}-off-totR`);
         const offTotHEl = document.getElementById(`cell-${game.id}-off-totH`);
@@ -1424,11 +1439,16 @@
           const pLocR = parseInt(pred.localR, 10);
           const pLocH = parseInt(pred.localH, 10);
 
+          const isPVisRValid = !isNaN(pVisR) && pred.visitorR !== '' && pred.visitorR !== null && pred.visitorR !== undefined;
+          const isPVisHValid = !isNaN(pVisH) && pred.visitorH !== '' && pred.visitorH !== null && pred.visitorH !== undefined;
+          const isPLocRValid = !isNaN(pLocR) && pred.localR !== '' && pred.localR !== null && pred.localR !== undefined;
+          const isPLocHValid = !isNaN(pLocH) && pred.localH !== '' && pred.localH !== null && pred.localH !== undefined;
+
           const fields = [
-            { id: 'visR', val: pVisR, target: offVisR, validTarget: isVisRValid },
-            { id: 'visH', val: pVisH, target: offVisH, validTarget: isVisHValid },
-            { id: 'locR', val: pLocR, target: offLocR, validTarget: isLocRValid },
-            { id: 'locH', val: pLocH, target: offLocH, validTarget: isLocHValid }
+            { id: 'visR', val: pVisR, target: offVisR, validTarget: isVisRValid, validVal: isPVisRValid },
+            { id: 'visH', val: pVisH, target: offVisH, validTarget: isVisHValid, validVal: isPVisHValid },
+            { id: 'locR', val: pLocR, target: offLocR, validTarget: isLocRValid, validVal: isPLocRValid },
+            { id: 'locH', val: pLocH, target: offLocH, validTarget: isLocHValid, validVal: isPLocHValid }
           ];
 
           fields.forEach(f => {
@@ -1437,7 +1457,7 @@
 
             el.classList.remove('cell-hit', 'cell-miss');
 
-            if (f.validTarget && !isNaN(f.val)) {
+            if (f.validTarget && f.validVal && isClosed) {
               if (f.val === f.target) {
                 el.classList.add('cell-hit');
                 gamePoints++;
@@ -1447,14 +1467,14 @@
             }
           });
 
-          const pTotR = (!isNaN(pVisR) && !isNaN(pLocR)) ? (pVisR + pLocR) : null;
-          const pTotH = (!isNaN(pVisH) && !isNaN(pLocH)) ? (pVisH + pLocH) : null;
+          const pTotR = calculateTotalSum(pred.visitorR, pred.localR);
+          const pTotH = calculateTotalSum(pred.visitorH, pred.localH);
 
           const totREl = document.getElementById(`cell-${game.id}-${p.id}-totR`);
           if (totREl) {
             totREl.textContent = pTotR !== null ? pTotR : '-';
             totREl.classList.remove('cell-hit', 'cell-miss');
-            if (offTotR !== null && pTotR !== null) {
+            if (offTotR !== null && pTotR !== null && isClosed) {
               if (pTotR === offTotR) {
                 totREl.classList.add('cell-hit');
                 gamePoints++;
@@ -1468,7 +1488,7 @@
           if (totHEl) {
             totHEl.textContent = pTotH !== null ? pTotH : '-';
             totHEl.classList.remove('cell-hit', 'cell-miss');
-            if (offTotH !== null && pTotH !== null) {
+            if (offTotH !== null && pTotH !== null && isClosed) {
               if (pTotH === offTotH) {
                 totHEl.classList.add('cell-hit');
                 gamePoints++;
